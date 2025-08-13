@@ -1,464 +1,671 @@
-#include "HX711.h"
-//  Waage mit AD Wandler HX711
-//  Library von Bogdan Necula
-
-#include "LiquidCrystal.h"
-//  LCD Anzeige
-//  Library von arduino-libraries
-
-#include "setup.h"
-
-//Eine neue Test Zeile
-
-/******************************************
- *      VARIABLEN DEFINITIONEN  Anfang     *
- *******************************************/
-// Create HX711 instance
-HX711 scale;
-
-// Create LCD instance
-LiquidCrystal lcd(RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7); // LCD Initialisierung
-
-bool leer = false;
-bool voll = false;
-
-float Leergew_einheiten;
-float Eichgew_einheiten;
-float Gewicht;
-float Korrekturfaktor;
-
-unsigned int Armposition;
-
-/*
-unsigned int Datensatz[MAX_ARM_POS] [LCD_CHARACTERS] [MAX_DATEN_SATZ] [MAX_DATEN_SATZ];
-          // Variablenname maximale
-          //           Anzahl der Armpstellungen (3)
-          //                         Überschrift freuer Text, Gipssorte (16)
-          //                                          Gesamtgewicht (1)
-          //                                              Mischungsverhältnis (1)
-*/
-
-unsigned int Ueberschriften[MAX_ARM_POS][LCD_CHARACTERS];
-unsigned int Gesamt_Gewichte[MAX_ARM_POS][MAX_DATEN_SATZ];
-unsigned int Mischverhaeltnise[MAX_ARM_POS][MAX_DATEN_SATZ];
-
-unsigned int Motoren[MAX_MOTOREN] = {ML, MM, MR}; // über Armpositoion adressieren
-unsigned int Ruettler[MAX_ARM_POS] = {RL, RM, RR};
-unsigned int Ventile[MAX_ARM_POS] = {VL, VM, VR};
-
-int Encoder_count_neu = 0;
-int Encoder_count_alt = -1;
-// steuerung des Encoder Interrupts. Nur wenn der Encoder in Funktion sein soll
-bool on_off_read_encoder = true;
-// definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
-int max_counter = 500;
-int min_counter = 0;
-
-unsigned long _lastIncReadTime = micros();
-unsigned long _lastDecReadTime = micros();
-unsigned long _pauseLength = 25000;
-
-int start = 1;
-
-/******************************************
- *      VARIABLEN DEFINITIONEN  Ende        *
- *******************************************/
+#include "service.h"
 
 void read_encoder()
 {
-  // Encoder interrupt routine for both pins. Updates counter
-  // if they are valid and have rotated a full indent
-  // Erklärung Youtube: How to use a Rotary Encoder with an Arduino - CODE EXPLAINED!
-  // https://www.youtube.com/watch?v=fgOfSHTYeio
+	// Encoder interrupt routine for both pins. Updates counter
+	// if they are valid and have rotated a full indent
+	// Erklärung Youtube: How to use a Rotary Encoder with an Arduino - CODE EXPLAINED!
+	// https://www.youtube.com/watch?v=fgOfSHTYeio
 
-  static uint8_t old_AB = 3;                                                               // Lookup table index
-  static int8_t encval = 0;                                                                // Encoder value
-  static const int8_t enc_states[] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0}; // Lookup table
-  
-  // nur wenn Encoder freigeschalten (true), soll interrupt Routine arbeiten
-  if (on_off_read_encoder)
-  {               
-    old_AB <<= 2; // Remember previous state
+	static uint8_t old_AB = 3;																 // Lookup table index
+	static int8_t encval = 0;																 // Encoder value
+	static const int8_t enc_states[] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0}; // Lookup table
 
-    if (digitalRead(ENCODER_A))
-      old_AB |= 0x02; // Add current state of pin A
-    if (digitalRead(ENCODER_B))
-      old_AB |= 0x01; // Add current state of pin B
+	// nur wenn Encoder freigeschalten (true), soll interrupt Routine arbeiten
+	if (on_off_encoder)
+	{
+		// Serial.println("Interrupt");
 
-    encval += enc_states[(old_AB & 0x0f)]; // Abschneiden der vorderen 8 Bits
+		old_AB <<= 2; // Remember previous state
 
-    // Update counter if encoder has rotated a full indent, that is at least 4 steps
-    if (encval > 3)
-    {                      // Four steps forward, zählt AUFwärts
-      int changevalue = 1; // Incrementeinheit ist 1
+		if (digitalRead(ENCODER_A))
+			old_AB |= 0x02; // Add current state of pin A
+		if (digitalRead(ENCODER_B))
+			old_AB |= 0x01; // Add current state of pin B
 
-      if ((micros() - _lastIncReadTime) < _pauseLength)
-        changevalue = FAST_INCREMENT; // Incrementeinheit wird auf 10 erhöht
+		encval += enc_states[(old_AB & 0x0f)]; // Abschneiden der vorderen 8 Bits
 
-      Encoder_count_neu += changevalue; // incremet counter um 1 oder 10; Encoder_count_neu = Encoder_count_neu + changevalue
-      if (Encoder_count_neu > max_counter)
-        Encoder_count_neu = max_counter; //  Korrektur, decremet counter um 1 oder 10
+		// Update counter if encoder has rotated a full indent, that is at least 4 steps
+		if (encval > 3)
+		{						 // Four steps forward, zählt AUFwärts
+			int changevalue = 1; // Incrementeinheit ist 1
 
-      _lastIncReadTime = micros();
-      encval = 0;
-    } // end if (encval > 3)
-    else if (encval < -3)
-    {                       // Four steps backward, zählt ABwärts
-      int changevalue = -1; // Decrementeinheit ist -1
+			// Incrementeinheit wird auf 10 erhöht wenn schneller gedreht wird
+			if ((micros() - _lastIncReadTime) < _pauseLength)
+				changevalue = FAST_INCREMENT;
 
-      if ((micros() - _lastDecReadTime) < _pauseLength)
-        changevalue = FAST_INCREMENT * changevalue; // Decrementeinheit wird auf -10 erhöht
+			Encoder_count_neu += changevalue; // incremet counter um 1 oder 10;
 
-      Encoder_count_neu += changevalue; // Decremet counter um 1 oder 10; Encoder_count_neu = Encoder_count_neu + changevalue
-      if (Encoder_count_neu < min_counter)
-        Encoder_count_neu = min_counter; // Korrektur, increment counter
+			//  Korrektur, wenn "überzählt", dann auf MAX setzen
+			if (Encoder_count_neu > max_counter)
+				Encoder_count_neu = min_counter;
 
-      _lastDecReadTime = micros();
-      encval = 0;
-    } // end else if(encval < -3)
-  } // end if (on_off_read_encoder)
+			_lastIncReadTime = micros();
+			encval = 0;
+		} // end if (encval > 3)
+		else if (encval < -3)
+		{						  // Four steps backward, zählt ABwärts
+			int changevalue = -1; // Decrementeinheit ist -1
+
+			// Decrementeinheit wird auf -10 erhöht  wenn schneller gedreht wird
+			if ((micros() - _lastDecReadTime) < _pauseLength)
+				changevalue = FAST_INCREMENT * changevalue;
+
+			Encoder_count_neu += changevalue; // Decremet counter um 1 oder 10;
+
+			//  Korrektur, wenn "unterzählt", dann auf MIN setzen
+			if (Encoder_count_neu < min_counter)
+				Encoder_count_neu = max_counter;
+
+			_lastDecReadTime = micros();
+			encval = 0;
+		} // end else if(encval < -3)
+	} // end if (on_off_encoder)
 } // end read_encoder() **********************************************************************
 
 void setup()
 {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("jetzt gehts los");
+	Serial.begin(115200);
+	Serial.println();
+	Serial.println("jetzt gehts los");
 
-  // Eingänge zur Armposition Erkennung:
-  pinMode(AL, INPUT); // Eingang Armposition LINKS
-  pinMode(AM, INPUT); // Eingang Armposition MITTE
-  pinMode(AR, INPUT); // Eingang Armposition RECHTS
+	// Eingänge zur Armposition Erkennung:
+	pinMode(AL, INPUT_PULLUP); // Eingang Armposition LINKS
+	pinMode(AM, INPUT_PULLUP); // Eingang Armposition MITTE
+	pinMode(AR, INPUT_PULLUP); // Eingang Armposition RECHTS
 
-  // Eingänge zur Gipsbecher Erkennung:
-  pinMode(BL, INPUT_PULLUP); // Eingang Armposition LINKS, pullup
-  pinMode(BM, INPUT_PULLUP); // Eingang Armposition MITTE, pullup
-  pinMode(BR, INPUT_PULLUP); // Eingang Armposition RECHTS, pullup
+	// Eingänge zur Gipsbecher Erkennung:
+	pinMode(BL, INPUT_PULLUP); // Eingang Armposition LINKS, pullup
+	pinMode(BM, INPUT_PULLUP); // Eingang Armposition MITTE, pullup
+	pinMode(BR, INPUT_PULLUP); // Eingang Armposition RECHTS, pullup
 
-  // Ausgang zur Gipsbecher Erkennung:
-  pinMode(TONE, OUTPUT); // Ausgang zur Tone Erzeugung
+	// Ausgang zur Gipsbecher Erkennung:
+	pinMode(TONE, OUTPUT); // Ausgang zur Tone Erzeugung
 
-  // Eingänge zur ENCODER Erkennung:
-  pinMode(ENCODER_B, INPUT_PULLUP); // Eingang pullup Interrupt 4 (Anzeigeprint FlBaKa Pin 18)
-  pinMode(ENCODER_A, INPUT_PULLUP); // Eingang pullup Interrupt 5 (Anzeigeprint FlBaKa Pin 17)
+	// Ausgang zur Front LED:
+	pinMode(LL, OUTPUT); // Ausgang zur LED LINKS
+	pinMode(LM, OUTPUT); // Ausgang zur LED MITTE
+	pinMode(LR, OUTPUT); // Ausgang zur LED RECHTS
 
-  // Interruptroutinen zuweisen
-  attachInterrupt(digitalPinToInterrupt(ENCODER_A), read_encoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_B), read_encoder, CHANGE);
+	// Eingänge zur ENCODER Erkennung:
+	pinMode(ENCODER_B, INPUT_PULLUP); // Eingang pullup Interrupt 4, Anzeigeprint FlBaKa Pin 18, Pin 2)
+	pinMode(ENCODER_A, INPUT_PULLUP); // Eingang pullup Interrupt 3, Anzeigeprint FlBaKa Pin 17, Pin 18)
 
-  // Ausgang zur Front LED:
-  pinMode(LL, OUTPUT); // Ausgang zur LED LINKS
-  pinMode(LM, OUTPUT); // Ausgang zur LED MITTE
-  pinMode(LR, OUTPUT); // Ausgang zur LED RECHTS
+	pinMode(INTERRUPT_RESERVE1, INPUT_PULLUP); // Eingang pullup Interrupt 5, Pin 3)
+	pinMode(INTERRUPT_RESERVE2, INPUT_PULLUP); // Eingang pullup Interrupt 2, Pin 19)
 
-  // Eingang Ausgang für I2C Bus bei HX711 (Interruptfähige Eingänge)
-  // INPUT oder OUTPUT wird durch Library HX711.h gesetzt
-  // pinMode(DATA_PIN, OUTPUT); // Daten PIN
-  // pinMode(CLOCK_PIN, OUTPUT); // Clock PIN
+	pinMode(LCD_BASE_30, INPUT_PULLUP); // Eingang pullup, 5Vcc, Anzeigeprint FlBaKa Pin 1, Pin 30)
+	pinMode(WAAGE_PIN, INPUT_PULLUP);	// Eingang pullup, Anzeigeprint FlBaKa Pin 2, Pin 31)
 
-  pinMode(LCD_BASE_30, INPUT_PULLUP); // Eingang pullup Vcc (Anzeigeprint FlBaKa Pin 1)
-  pinMode(WAAGE_PIN, INPUT_PULLUP);   // Eingang pullup (Anzeigeprint FlBaKa Pin 2)
+	// Ausgänge für LCD bei LiquidCrysta
+	// OUTPUT wird durch Library LiquidCrystal.h gesetzt
 
-  // Ausgänge für LCD bei LiquidCrysta
-  // OUTPUT wird durch Library LiquidCrystal.h gesetzt
+	pinMode(LCD_BASE_43, INPUT_PULLUP); // Eingang pullup Poti, LCD Helligkeit (Anzeigeprint FlBaKa Pin 14)
+	pinMode(I_O_PIN, INPUT_PULLUP);		// Eingang pullup (Anzeigeprint FlBaKa Pin 15)
+	pinMode(ENTER_PIN, INPUT_PULLUP);	// Eingang pullup (Anzeigeprint FlBaKa Pin 16)
+	pinMode(LCD_BASE_46, INPUT_PULLUP); // Eingang pullup Pin 3 Interrupt 5 (Anzeigeprint FlBaKa Pin 17)
+	pinMode(LCD_BASE_47, INPUT_PULLUP); // Eingang pullup Pin 2 Interrupt 4 (Anzeigeprint FlBaKa Pin 18)
+	pinMode(LCD_BASE_48, INPUT_PULLUP); // Eingang pullup GND (Anzeigeprint FlBaKa Pin 19)
+	pinMode(LCD_BASE_49, INPUT_PULLUP); // Eingang pullup GND (Anzeigeprint FlBaKa Pin 20)
 
-  pinMode(LCD_BASE_43, INPUT_PULLUP); // Eingang pullup Poti, LCD Helligkeit (Anzeigeprint FlBaKa Pin 14)
-  pinMode(I_O_PIN, INPUT_PULLUP);     // Eingang pullup (Anzeigeprint FlBaKa Pin 15)
-  pinMode(ENTER_PIN, INPUT_PULLUP);   // Eingang pullup (Anzeigeprint FlBaKa Pin 16)
-  pinMode(LCD_BASE_46, INPUT_PULLUP); // Eingang pullup Pin 3 Interrupt 5 (Anzeigeprint FlBaKa Pin 17)
-  pinMode(LCD_BASE_47, INPUT_PULLUP); // Eingang pullup Pin 2 Interrupt 4 (Anzeigeprint FlBaKa Pin 18)
-  pinMode(LCD_BASE_48, INPUT_PULLUP); // Eingang pullup GND (Anzeigeprint FlBaKa Pin 19)
-  pinMode(LCD_BASE_49, INPUT_PULLUP); // Eingang pullup GND (Anzeigeprint FlBaKa Pin 20)
+	// Ausgänge werden als  Eingänge geschaltzen und dienen als Stützpunkte
+	pinMode(AUSGANG_9, INPUT_PULLUP); // A9 wird Eingang pullup für Vcc (Relaisprint FlBaKa Pin 1 und 2)
+	pinMode(AUSGANG_0, INPUT_PULLUP); // A0 wird Eingang pullup für GND (Relaisprint FlBaKa Pin 19 und 20)
 
-  // Ausgänge für Relais für: Motoren, Rüttler, Ventike und Wasserpumpe:
-  pinMode(VR, OUTPUT);              // Ausgang 11
-  pinMode(VM, OUTPUT);              // Ausgang 10
-  pinMode(AUSGANG_9, INPUT_PULLUP); // A9 wird Eingang pullup Vcc (Relaisprint FlBaKa Pin 1 und 2)
-  pinMode(ML, OUTPUT);              // Ausgang A8
-  pinMode(MM, OUTPUT);              // Ausgang A7
-  pinMode(MR, OUTPUT);              // Ausgang A6
-  pinMode(WP, OUTPUT);              // Ausgang A5
-  pinMode(RL, OUTPUT);              // Ausgang A4
-  pinMode(RM, OUTPUT);              // Ausgang A3
-  pinMode(RR, OUTPUT);              // Ausgang A2
-  pinMode(VL, OUTPUT);              // Ausgang A1
-  pinMode(AUSGANG_0, INPUT_PULLUP); // A0 wird Eingang pullup GND (Relaisprint FlBaKa Pin 19 und 20)
+	// Ausgänge für Relais : Motoren, Rüttler, Ventile und Wasserpumpe definieren
+	for (int i = 0; i < anzahlrelais; i++) // Pointer von 0 bis 9
+	{
+		pinMode(relais[i], OUTPUT);	  // Ausgänge der Relais als OUTPUT konfigutieren
+		digitalWrite(relais[i], AUS); // Relais ausschalten (negative Logik: Ausgang ist also high, wenn Relais AUS ist)
+	}
 
-  // Relais ausschalten:
-  digitalWrite(VR, AUS);
-  digitalWrite(VM, AUS);
-  digitalWrite(ML, AUS);
-  digitalWrite(MM, AUS);
-  digitalWrite(MR, AUS);
-  digitalWrite(WP, AUS);
-  digitalWrite(RL, AUS);
-  digitalWrite(RM, AUS);
-  digitalWrite(RR, AUS);
-  digitalWrite(VL, AUS);
+	// Front LED ausschalten. Verkehrte Logik: LOW = EIN, HIGH = AUS
+	digitalWrite(LL, EIN);
+	digitalWrite(LM, EIN);
+	digitalWrite(LR, EIN);
 
+	//  attach interrupt-routin,
+	//  Interrupt 2, Pin 19, Stützpunkt Pin 46, FlBaKa Pin 17
+	attachInterrupt(digitalPinToInterrupt(ENCODER_A), read_encoder, CHANGE);
 
-  // Initialisierung LCD
-  lcd.begin(LCD_CHARACTERS, LCD_ZEILEN); // 16 Charakters, 2 Zeilen
+	//  attach interrupt-routin,
+	//  Interrup 3, Pin 18, Stützpunkt Pin 47, FlBaKa Pin 18
+	attachInterrupt(digitalPinToInterrupt(ENCODER_B), read_encoder, CHANGE);
 
-  // Initialisierung Waage
-  scale.begin(DATA_PIN, CLOCK_PIN); // dataPin =20, clockPin = 21, gain = 128 / Interruptfähige Pins
+	// Initialisierung LCD
+	lcd.begin(LCD_CHARACTERS, LCD_ZEILEN); // 16 Charakters, 2 Zeilen
 
-  // attach interrupts
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_A), read_encoder, CHANGE);
-  // attachInterrupt(digitalPinToInterrupt(ENCODER_B), read_encoder, CHANGE);
+	// Initialisierung Waage
+	// Eingang/Ausgang für I2C Bus bei HX711 (Interruptfähige Eingänge)
+	// INPUT oder OUTPUT wird durch Library HX711.h gesetzt
+	// pinMode(DATA_PIN, OUTPUT); // Daten PIN
+	// pinMode(CLOCK_PIN, OUTPUT); // Clock PIN
+	scale.begin(DATA_PIN, CLOCK_PIN); // dataPin =20, clockPin = 21, gain = 128 / Interruptfähige Pins
 
-  // WeightArm weightArms[3];
+	// WeightArm weightArms[3];
 
-  // void showArm(WeightArm arm)
-  //{
-  //  lcd.println(arm.getDisplayTextLine1());
-  //  lcd.println(arm.getDisplayTextLine2());
-  // }
+	// void showArm(WeightArm arm)
+	//{
+	//  lcd.println(arm.getDisplayTextLine1());
+	//  lcd.println(arm.getDisplayTextLine2());
+	// }
 
 } // end setup **********************************************************************
 
 void loop()
 {
-  // int armIndex = 0; // Index for the current arm being processed
-  // showArm(weightArms[armIndex]); // Display the first arm's information
+	// int armIndex = 0; // Index for the current arm being processed
+	// showArm(weightArms[armIndex]); // Display the first arm's information
 
-  // int localGewicht = 50000;
-  // int zeilenIndex = 1;
+	// int localGewicht = 50000;
+	// int zeilenIndex = 1;
 
-  // weightArms[armIndex].setWeight(zeilenIndex, localGewicht); // Set the weight for the first arm
+	// weightArms[armIndex].setWeight(zeilenIndex, localGewicht); // Set the weight for the first arm
 
-  // int sum = calulator(3, 4);
+	// int sum = calulator(3, 4);
 
-  /*
-  if (start == 1)
-  {
-  start = 0;
-    //  ***************************** LCD Testroutine **************************************
+	/*
+	// Anfang LCD Testroutine
 
-    Serial.println("geradern Pin Test  ");
+		Serial.println("geradern Pin Test  ");
 
-     do {
-      //  LCD Testroutine für geraden LCD Pins: 4, 6, 8, 10, 12, 14
-      digitalWrite(RS, EIN); // LCD Pin 4
-      digitalWrite(EN, EIN); // LCD Pin 6
-      digitalWrite(D1, EIN); // LCD Pin 8
-      digitalWrite(D3, EIN); // LCD Pin 10
-      digitalWrite(D5, EIN); // LCD Pin 12
-      digitalWrite(D7, EIN); // LCD Pin 14
-      delay(500);
-      digitalWrite(RS, AUS);
-      digitalWrite(EN, AUS);
-      digitalWrite(D1, AUS);
-      digitalWrite(D3, AUS);
-      digitalWrite(D5, AUS);
-      digitalWrite(D7, AUS);
-      delay(500);
-    } while (digitalRead(ENTER_PIN));
+		 do {
+		  //  LCD Testroutine für geraden LCD Pins: 4, 6, 8, 10, 12, 14
+		  digitalWrite(RS, EIN); // LCD Pin 4
+		  digitalWrite(EN, EIN); // LCD Pin 6
+		  digitalWrite(D1, EIN); // LCD Pin 8
+		  digitalWrite(D3, EIN); // LCD Pin 10
+		  digitalWrite(D5, EIN); // LCD Pin 12
+		  digitalWrite(D7, EIN); // LCD Pin 14
+		  delay(500);
+		  digitalWrite(RS, AUS);
+		  digitalWrite(EN, AUS);
+		  digitalWrite(D1, AUS);
+		  digitalWrite(D3, AUS);
+		  digitalWrite(D5, AUS);
+		  digitalWrite(D7, AUS);
+		  delay(500);
+		} while (digitalRead(ENTER_PIN));
 
-     Serial.println("UNgeradern Pin Test  ");
+		Serial.println("UNgeradern Pin Test  ");
 
-  do {
-    //  LCD Testroutine für UNgeraden LCD Pins: 5, 7, 9, 11, 13, 15
-      digitalWrite(RW, EIN); // LCD Pin 5
-      digitalWrite(D0, EIN); // LCD Pin 7
-      digitalWrite(D2, EIN); // LCD Pin 9
-      digitalWrite(D4, EIN); // LCD Pin 11
-      digitalWrite(D6, EIN); // LCD Pin 13
-      delay(500);
-      digitalWrite(RW, AUS);
-      digitalWrite(D0, AUS);
-      digitalWrite(D2, AUS);
-      digitalWrite(D4, AUS);
-      digitalWrite(D6, AUS);
-      delay(500);
-    } while (digitalRead(ENTER_PIN));
+		do {
+		//  LCD Testroutine für UNgeraden LCD Pins: 5, 7, 9, 11, 13, 15
+		  digitalWrite(RW, EIN); // LCD Pin 5
+		  digitalWrite(D0, EIN); // LCD Pin 7
+		  digitalWrite(D2, EIN); // LCD Pin 9
+		  digitalWrite(D4, EIN); // LCD Pin 11
+		  digitalWrite(D6, EIN); // LCD Pin 13
+		  delay(500);
+		  digitalWrite(RW, AUS);
+		  digitalWrite(D0, AUS);
+		  digitalWrite(D2, AUS);
+		  digitalWrite(D4, AUS);
+		  digitalWrite(D6, AUS);
+		  delay(500);
+		} while (digitalRead(ENTER_PIN));
 
-   Serial.println("übergabe an LCD");
-    lcd.begin(LCD_CHARACTERS, LCD_ZEILEN);                //16 Charakters, 2 Zeilen
-  }  //  end if (start == 1)
+	   Serial.println("übergabe an LCD");
+	   //  lcd.begin(LCD_CHARACTERS, LCD_ZEILEN);                //16 Charakters, 2 Zeilen
+	   //}  //  end if (start == 1)
 
 
-  //Serial.println("läuft normal");
-  */
-
-  do
-  {
-    Serial.println(Encoder_count_neu);
-    delay(500);
-    if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value to serial
-    {
-      Encoder_count_alt = Encoder_count_neu;
-
-      Serial.println(Encoder_count_neu);
-      lcd.setCursor(0, 0); // top left
-      lcd.print("Encoder:     ");
-      lcd.setCursor(10, 0);
-      lcd.print(Encoder_count_neu);
-    } // end if (Encoder_count_neu != Encoder_count_alt)
-
-    if (!digitalRead(WAAGE_PIN))
-    {
-      lcd.setCursor(0, 1); // top left
-      lcd.print("Taste Waage");
-      Serial.println("Taste Waage getrückt");
-      delay(500);
-    }
-
-    if (!digitalRead(I_O_PIN))
-    {
-      lcd.setCursor(0, 1); // top left
-      lcd.print("Taste I/O  ");
-      Serial.println("Taste I/O getrückt");
-      delay(500);
-    }
-
-    if (!digitalRead(ENTER_PIN))
-    {
-      lcd.setCursor(0, 1); // top left
-      lcd.print("Enter      ");
-      Serial.println("Taste Enter getrückt");
-      delay(500);
-    }
-
-    /*
-  if (digitalRead(AL))
-    {
-      lcd.setCursor(14, 0);
-      Serial.println("LINKS");
-      lcd.print("LINKS ");
-    }
-    else
-      if (digitalRead(AM))
-      {
-        lcd.setCursor(14, 0);
-        Serial.println("MITTE");
-        lcd.print("MITTE ");
-      }
-      else
-        if (digitalRead(AR))
-          {
-            lcd.setCursor(14, 0);
-            Serial.println("RECHTS");
-            lcd.print("RECHTS");
-          }
-        else
-          {
-            lcd.setCursor(14, 0);
-            Serial.println("NO ARM");
-            lcd.print("NO ARM");
-         }
-  */
-  } while (digitalRead(ENTER_PIN));
-  /*
-  digitalWrite(ML, EIN);
-  delay(1500);
-
-  digitalWrite(MM, EIN);
-  delay(1500);
-
-  digitalWrite(MR, EIN);
-  delay(1500);
-
-  digitalWrite(RL, EIN);
-  delay(1500);
-
-  digitalWrite(RM, EIN);
-  delay(1500);
-
-  digitalWrite(RR, EIN);
-  delay(1500);
-
-  digitalWrite(VL, EIN);
-  delay(1500);
-
-  digitalWrite(VM, EIN);
-  delay(1500);
-
-  digitalWrite(VR, EIN);
-  delay(1500);
-
-  digitalWrite(WP, EIN);
-  delay(1500);
-
-  digitalWrite(ML, AUS);
-  digitalWrite(MM, AUS);
-  digitalWrite(MR, AUS);
-  digitalWrite(RL, AUS);
-  digitalWrite(RM, AUS);
-  digitalWrite(RR, AUS);
-  digitalWrite(VL, AUS);
-  digitalWrite(VM, AUS);
-  digitalWrite(VR, AUS);
-  digitalWrite(WP, AUS);
-
-  delay(1500);
-  */
-
-  // Armposition in Armpointer einlesen. z. B.: Armpointer[Armposition] = ARM_LINKS;
-
-  /*
- Armposition = ARM_LINKS; //read_Armposition;
-
- digitalWrite(Motoren [Armposition], EIN);
- digitalWrite(Ruettler[Armposition], EIN);
-
- tone(8, 340, 750);     // Ton F5
- delay(2000);
- // Bis Waagen Zwischenwert erreicht ist
- digitalWrite(Motoren [Armposition], AUS);
- digitalWrite(Ruettler[Armposition], AUS);
-
- tone(8, 466, 750);     //  Ton Bb5
- delay(2000);
-
- digitalWrite(WP, EIN);
- digitalWrite(Ventile[Armposition], EIN);
-
- tone(8, 262, 750);     //  Ton C5
- delay(2000);
- // Bis Waagen Endwert erreicht ist
- digitalWrite(Ventile[Armposition], AUS);
- digitalWrite(WP, AUS);
-
- tone(8, 392, 750);     //   Ton G5
- delay(2000);
+	   //Serial.println("läuft normal");
 
 
+	  //Ende LCD Testroutine
+	*/
 
-  if (digitalRead(ENTER_PIN) == 1)
- {
-   while (!scale.is_ready()) {}      // warten bis die Waage bereit ist
+	/*
+	int wert; // ausgelesener Wert
 
-   Leergew_einheiten = scale.read_average(20);
-   Serial.println("Eichen OHNE Gewicht   ");
-   Serial.println(Leergew_einheiten);
+	  pinMode(A0, INPUT_PULLUP);    // Ausgang als INPUT konfigutieren
+	  pinMode(A9, INPUT_PULLUP);    // Ausgang als INPUT konfigutieren
 
-   delay (5000);
-   leer = true;
- }  // end if (digitalRead(ENTER_PIN) == 1)
-  else
- {
-   while (!scale.is_ready()) {}  // warten bis die Waage bereit ist
+	  for (int i = 0; i < 10; i++)   //  Ausgangspointer zeigt auf Array 0 bis 9
+	  {
+		 pinMode(relais[i], OUTPUT);    // Ausgänge der Relais als OUTPUT konfigutieren
+		 digitalWrite(relais[i], AUS);  // Relais ausschalten
+	  }
 
-   Eichgew_einheiten = scale.read_average(20); // Wagenwert mit 150 Gramm
-   Serial.println("Eichen MIT Gewicht   ");
-   Serial.println(Eichgew_einheiten);
-   voll = true;
- }   // end else   if (digitalRead(ENTER_PIN) == 1)
+	  lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	  lcd.print("Ausgang");
+	  lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 1
+	  lcd.print("Rotation");
 
- if (leer & voll)
- {
-   Korrekturfaktor = (Eichgew_einheiten - Leergew_einheiten) / 150;    // Differenz der Gewichtseinheit minus der Leereinheitdurch, Dividiert durch das Gewicht in Gramm
+	  wert = 14;
 
-   while (true)
-   {
-     Serial.print("gemessenes Gewicht: ");
-     Gewicht = (scale.read() - Leergew_einheiten ) / Korrekturfaktor;
-     Serial.println((unsigned int) Gewicht);
+	  do
+		{
+		  wert=wert+1;  //Ausgangspointer hochzählen
 
-     delay (4000);
-   }  //  end while (true)
- }  // end if (leer & voll)
+		  if (wert > 9)  // Wenn Ausgangspointer größer als 9
+			{
+			  wert = 0; // Wert auf 0 setzen, wenn 10 erreicht ist
+			  lcd.setCursor(8, 0);
+			  lcd.print("xxxxx");
+		   }
 
- */
+		  lcd.setCursor(8, 0);
+		  lcd.print(wert);
+
+		  for (int i = 1; i < 10; i++)  // 10 mal pulsen
+		   {
+			 lcd.setCursor(9, 1);
+			 lcd.print(i);
+
+			 digitalWrite(relais[wert], EIN); // Relais 1 einschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
+			 delay (500); // 100 ms warten
+			 digitalWrite(relais[wert], AUS); // Relais 1 ausnschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
+			 delay (500); // 100 ms warten
+			}
+
+	} while (true);  //
+
+	//  Ende Relais Sondertest  **************************************
+	*/
+
+	////////////////////////////////// Test EEPROM Anfang ///////////////////////////////////////////
+	service(); // Aufruf der EEPROM Testfunktion
+				   ////////////////////////////////// Test EEPROM Ende ///////////////////////////////////////////
+
+	//  ************************** Encoder Testroutine Anfang **************************************
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("ENCODER   P: I/O");
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("ENC: ");
+
+	min_counter = 0;
+	max_counter = MAX_GEWICHT;			 // Maximales messbares Gewicht in Gramm
+	Encoder_count_neu = min_counter;	 // Startwert für Encoder
+	Encoder_count_alt = min_counter - 1; // Startwert für Encoder
+	on_off_encoder = true;			 // Encoder Interrupt einschalten
+
+	do
+	{
+
+		if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value to serial
+		{
+			Serial.println(Encoder_count_neu);
+			Encoder_count_alt = Encoder_count_neu;
+
+			lcd.setCursor(5, 1); // Setz Curser auf Charakter 6, Zeile 2
+			lcd.print("   ");	 // Lösche die Zeile
+			lcd.setCursor(5, 1); // Setz Curser auf Charakter 6, Zeile 2
+			lcd.print(Encoder_count_neu);
+		} // end if (Encoder_count_neu != Encoder_count_alt)
+	} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+
+	on_off_encoder = false; // Encoder Interrupt ausschalten
+
+	//  ************************** Encoder Testroutine Ende **************************************
+
+	//  ************************** Armposition Erkennung Anfang **************************************
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("  weiter ENTER  ");
+	lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("                "); // Lösche die Zeile
+
+	Anzeige = ARM_NO_POS; // Startwert für Armposition
+	Anzeige_alt = 255;	  // Startwert für Anzeige
+
+	do //  ************************** Armposition Erkennung Beginn **************************************
+	{
+		if (!digitalRead(AL))
+			Anzeige = ARM_LINKS; // Negative Logik
+		else
+		{
+			if (!digitalRead(AM))
+				Anzeige = ARM_MITTE;
+			else
+			{
+				if (!digitalRead(AR))
+					Anzeige = ARM_RECHTS;
+				else
+					Anzeige = ARM_NO_POS;
+			} // end else if (!digitalRead(AM))
+		} // end else if (!digitalRead(AL))
+
+		if (Anzeige != Anzeige_alt)
+		{
+			lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+
+			switch (Anzeige)
+			{
+			case ARM_LINKS:
+				lcd.print("AL");
+				break;
+			case ARM_MITTE:
+				lcd.print("AM");
+				break;
+			case ARM_RECHTS:
+				lcd.print("AR");
+				break;
+			case ARM_NO_POS:
+				lcd.print("NA");
+				break;
+			default:
+				lcd.print("xx");
+				break;
+			} // end switch (Anzeige)
+
+			Anzeige_alt = Anzeige;
+		}
+	} while (digitalRead(ENTER_PIN)); // solange Entertaste nicht gedrückt ist, also high ist
+									  //  ************************** Armposition Erkennung Ende **************************************
+
+	//  ************************** Becher Erkennung Anfang **************************************
+	Anzeige_alt = 255;
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("  weiter WAAGE  ");
+
+	do
+	{
+		if (!digitalRead(BL))
+			Anzeige = BECHER_LINKS;
+		else if (!digitalRead(BM))
+			Anzeige = BECHER_MITTE;
+		else if (!digitalRead(BR))
+			Anzeige = BECHER_RECHTS;
+		else
+			Anzeige = NO_BECHER;
+
+		if (Anzeige != Anzeige_alt)
+		{
+			lcd.setCursor(3, 1); // Setz Curser auf Charakter 4, Zeile 2
+
+			switch (Anzeige)
+			{
+			case BECHER_LINKS:
+				lcd.print("BL");
+				break;
+			case BECHER_MITTE:
+				lcd.print("BM");
+				break;
+			case BECHER_RECHTS:
+				lcd.print("BR");
+				break;
+			case NO_BECHER:
+				lcd.print("NB");
+				break;
+			default:
+				lcd.print("xx");
+				break;
+			} // end switch (Anzeige)
+
+			Anzeige_alt = Anzeige;
+		}
+	} while (digitalRead(WAAGE_PIN)); // solange Waage Taste nicht gedrückt ist, also high ist
+									  //  ************************** Becher Erkennung Ende **************************************
+
+	//  ************************** LED Front Anfang **************************************
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("  weiter  I/O   ");
+
+	do
+	{
+		lcd.setCursor(7, 1); // Setz Curser auf Charakter 8, Zeile 2
+		lcd.print("LL");
+		digitalWrite(LL, AUS);
+		delay(750);
+		digitalWrite(LL, EIN);
+
+		lcd.setCursor(7, 1); // Setz Curser auf Charakter 8, Zeile 2
+		lcd.print("LM");
+		digitalWrite(LM, AUS);
+		delay(750);
+		digitalWrite(LM, EIN);
+
+		lcd.setCursor(7, 1); // Setz Curser auf Charakter 8, Zeile 2
+		lcd.print("LR");
+		digitalWrite(LR, AUS);
+		delay(750);
+		digitalWrite(LR, EIN);
+	} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt ist, also high ist
+	//  ************************** LED Front Ende **************************************
+
+	//  ************************** Buzzer Anfang **************************************
+	lcd.setCursor(0, 0); // Set cursor to column 1, row 1
+	lcd.print("  weiter Enter  ");
+
+	lcd.setCursor(11, 1); // Setz Curser auf Charakter 10, Zeile 2
+	lcd.print("BZ");
+
+	do
+	{
+		// Sequenz für POSITIVES Ereignis
+
+		// Die Frequenzen repräsentieren die Noten der Tonleiter (C4, D4, E4, F4, G4).
+		tone(TONE, 523); // C4 (Do)
+		delay(200);		 // 300 ms warten
+		tone(TONE, 587); // D4 (Re)
+		delay(200);		 // 300 ms warten
+		tone(TONE, 659); // E4 (Mi)
+		delay(200);		 // 300 ms warten
+		tone(TONE, 698); // F4 (Fa)
+		delay(200);		 // 300 ms warten
+		tone(TONE, 784); // G4 (Sol)
+		delay(200);		 // 300 ms warten
+
+		noTone(TONE); // Alle Töne ausschalten
+
+		delay(750); // Warte 750 ms
+
+		// Sequenz für NEGATIVES Ereignis
+
+		tone(TONE, 261); // C4 (Do)
+		delay(400);		 // 400 ms warten
+		tone(TONE, 220); // A3 (La)
+		delay(400);		 // 400 ms warten
+		tone(TONE, 196); // G3 (Sol)
+		delay(400);		 // 400 ms warten
+		tone(TONE, 174); // F3 (Fa)
+		delay(400);		 // 400 ms warten
+						 // tone(TONE, 165); // E3 (Mi)
+						 // delay(400);            // 400 ms warten
+						 //  tone(TONE, 147); // D3 (Re)
+		// delay(400);            // 400 ms warten
+
+		noTone(TONE); // Alle Töne ausschalten
+
+		delay(750); // Warte 750 ms
+
+	} while (digitalRead(ENTER_PIN)); // solange Enter Taste nicht gedrückt ist, also high ist
+	//  ************************** Buzzer Ende **************************************
+
+	//  ************************** Waage Kalibrierung Anfang **************************************
+
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("LeerGew. P:Waage");
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print(" wird ermittelt ");
+	while (digitalRead(WAAGE_PIN))
+	{
+	} // warten bis Waage Taste gedrückt wird
+
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("  bitte warten  ");
+
+	while (scale.is_ready())
+	{
+	} // warten bis die Waage bereit ist
+	Leergew_einheiten = scale.read_average(20); // Leergewicht einlesen, Durchschnitt von 20 Messungen
+	lcd.setCursor(0, 0);						// Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("LeerGewich P:I/O");
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("  gespeichert   ");
+	while (digitalRead(I_O_PIN))
+	{
+	} // warten bis I/O Taste gedrückt wird
+
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("LeerGew. P:Enter");
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("LeerGew:");
+	lcd.setCursor(8, 1); // Setz Curser auf Charakter 9, Zeile 2
+	lcd.print(Leergew_einheiten);
+	while (digitalRead(ENTER_PIN))
+	{
+	} // warten bis Enter Taste gedrückt wird
+
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("Gewicht auflegen");
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("ready WaageTaste");
+	while (digitalRead(WAAGE_PIN))
+	{
+	} // warten bis Waage Taste gedrückt wird
+
+	lcd.setCursor(0, 0); // Set cursor to column 1, row 1
+	lcd.print("Gewicht  P:Enter");
+	lcd.setCursor(0, 1); // Set cursor to column 1, row 2
+	lcd.print("Tara Soll:     g");
+
+	min_counter = 0;
+	max_counter = MAX_GEWICHT;		 // Maximales messbares Gewicht in Gramm
+	Encoder_count_neu = min_counter; // Gewicht des Sollgewichtes in Gramm
+	Encoder_count_alt = min_counter - 1;
+
+	on_off_encoder = true; // Encoder Interrupt einschalten
+
+	do
+	{
+		if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value
+		{
+			Encoder_count_alt = Encoder_count_neu;
+
+			lcd.setCursor(11, 1);		  // Set cursor to column 11, row 2
+			lcd.print("    ");			  // Clear previous value
+			lcd.setCursor(11, 1);		  // Set cursor to column 11, row 2
+			lcd.print(Encoder_count_neu); // im Encoder_count_neu steht der Gewichtswert in Gramm
+		} // end if (Encoder_count_neu != Encoder_count_alt)
+	} while (digitalRead(ENTER_PIN)); // warten bis Enter Taste gedrückt wird
+
+	on_off_encoder = false; // Encoder Interrupt ausschalten
+								 //  ************************** Waage Kalibrierung Ende **************************************
+
+	//  ************************** Wiegefunktion Anfang **************************************
+
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("Messung  P:Waage");
+
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("Initialisierung ");
+
+	while (scale.is_ready())
+	{
+	} // warten bis die Waage bereit ist
+
+	Eichgew_einheiten = scale.read_average(3); // Waagenwert einlesen, Durchschnitt von 3 Messungen
+
+	// Differenz der Gewichtseinheit minus der Leereinheitdurch,
+	// Dividiert durch das eingegeben Gewicht in Gramm (Encoder_count_neu)
+	Korrekturfaktor = (Eichgew_einheiten - Leergew_einheiten) / Encoder_count_neu;
+
+	Gewicht = 0;	  // Gewicht auf 0 setzen
+	Gewicht_alt = -1; // Gewicht_alt auf -1 setzen
+
+	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+	lcd.print("Gewicht:        g");
+
+	do
+	{
+		while (scale.is_ready())
+		{
+		} // warten bis die Waage bereit ist
+
+		Gewicht = (scale.read() - Leergew_einheiten) / Korrekturfaktor;
+
+		if (Gewicht != Gewicht_alt) // Anzeigen des Gewichtes nur wenn es sich geändert hat
+		{
+			Gewicht_alt = Gewicht;			  // Gewicht_alt aktualisieren
+			lcd.setCursor(9, 1);			  // Setze Cursor auf die 9. Stelle der 2. Zeile
+			lcd.print("    ");				  // Clear previous value
+			lcd.setCursor(9, 1);			  // Setze Cursor auf die 9. Stelle der 2. Zeile
+			lcd.print((unsigned int)Gewicht); // Gewicht anzeigen, casten auf unsigned int
+		} // end if (Gewicht != Gewicht_alt)
+
+	} while (digitalRead(WAAGE_PIN));
+
+	//  ************************** Wiegefunktion Ende **************************************
+
+	//  ************************** Relais Test Anfang **************************************
+
+	min_counter = 0;
+	max_counter = anzahlrelais - 1;		 // zur Adressierug des relais Arryas
+	Encoder_count_neu = min_counter;	 // Startwert für Encoder; unterschiedlich, damit beim ersten Durchgang sofort ausgeführt wird
+	Encoder_count_alt = min_counter - 1; // Erststartbedingung für Encoder herstellen
+
+	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("Test:ENT end:I/O");
+
+	on_off_encoder = true; // Encoder Interrupt einschalten
+
+	do
+	{
+		if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value to serial
+		{
+			Encoder_count_alt = Encoder_count_neu;
+
+			lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+
+			switch (relais[Encoder_count_neu])
+			{
+			case RELAIS_ML:
+				lcd.print("Gips Motor Links");
+				break;
+			case RELAIS_MM:
+				lcd.print("Gips Motor Mitte");
+				break;
+			case RELAIS_MR:
+				lcd.print("Gips Motor Recht");
+				break;
+			case RELAIS_RL:
+				lcd.print(" Ruettler Links ");
+				break;
+			case RELAIS_RM:
+				lcd.print(" Ruettler Mitte ");
+				break;
+			case RELAIS_RR:
+				lcd.print(" Ruettler Rechts");
+				break;
+			case RELAIS_VL:
+				lcd.print("H2O Ventil Links");
+				break;
+			case RELAIS_VM:
+				lcd.print("H2O Ventil Mitte");
+				break;
+			case RELAIS_VR:
+				lcd.print("H2O Ventil Recht");
+				break;
+			case RELAIS_WP:
+				lcd.print("   H2O Pumpe    ");
+				break;
+			default:
+				lcd.print("xx??xx");
+				break;
+			} // end switch (Encoder_count_neu)
+		} // end if (Encoder_count_neu != Encoder_count_alt)
+
+		if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
+		{
+			on_off_encoder = false; // Encoder Interrupt ausschalten
+			lcd.setCursor(0, 1);		 // Setz Curser auf Charakter 1, Zeile 2
+			lcd.print(relais[Encoder_count_neu]);
+
+			digitalWrite(relais[Encoder_count_neu], EIN); // Relais einschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
+
+			while (!digitalRead(ENTER_PIN))
+			{
+			}// Relais halten bis Enter Taste losgelassen
+
+			digitalWrite(relais[Encoder_count_neu], AUS); // Relais ausschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
+
+			on_off_encoder = true; // Encoder Interrupt einschalten
+		} // if(!digitalRead(ENTER_PIN))
+
+	} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+
+	//  ************************** Relais Test Ende **************************************
+
 } // end void loop() **********************************************************************
