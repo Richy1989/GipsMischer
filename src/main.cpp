@@ -142,13 +142,9 @@ void setup()
 	// pinMode(CLOCK_PIN, OUTPUT); // Clock PIN
 	scale.begin(DATA_PIN, CLOCK_PIN); // dataPin =20, clockPin = 21, gain = 128 / Interruptfähige Pins
 
-	// WeightArm weightArms[3];
-
-	// void showArm(WeightArm arm)
-	//{
-	//  lcd.println(arm.getDisplayTextLine1());
-	//  lcd.println(arm.getDisplayTextLine2());
-	// }
+	//Cal init in setup
+	init_data();
+	 //daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
 
 } // end setup **********************************************************************
 

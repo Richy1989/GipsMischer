@@ -1,91 +1,41 @@
 #include "service.h"
 
-//  ************************** Anfang EEPROM TEST **************************************
-void EEPROM_test()
+void come_back(bool mit_ton)
 {
-	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("EEPROM TEST  I/O");
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("Adr xxxx Dat yyy");
+	lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
+	lcd.print("Hardw. TEST :I/O"); //  Text in erster Zeile anzeigen
+	lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
 
-	min_counter = 0;					 // Minimalwert für Encoder
-	max_counter = MAX_EEPROM_ADRESSE;	 // Arduino Mega hat 4 KB (4096 bytes) EEPROM Zellen, also 0 bis 4095
-	Encoder_count_neu = min_counter;	 // Startwert für Encoder
-	Encoder_count_alt = min_counter - 1; // Startwert für Encoder
+	min_counter = 0;
+	max_counter = anzahl_tests - 1;
 
-	do
+	if (mit_ton) //  Tonfolge abspielen
 	{
-		if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value to serial
-		{
-			Encoder_count_alt = Encoder_count_neu;
+		tone(TONE_PIN, 587);  // D4 (Re)
+		delay(300);			  // 300 ms warten
+		tone(TONE_PIN, 1587); // D5 (Mi)
+		delay(200);			  // 200 ms warten
+		noTone(TONE_PIN);	  // Alle Töne ausschalten
+		delay(500);			  // 500 ms warten
 
-			lcd.setCursor(4, 1);		  // Setz Curser auf Charakter 5, Zeile 2
-			lcd.print("    ");			  // Lösche die Zeile
-			lcd.setCursor(4, 1);		  // Setz Curser auf Charakter 5, Zeile 2
-			lcd.print(Encoder_count_neu); // Speicherzelle anzeigen
+		mit_ton = false; //  kein Ton ist default
+	} // end if (mit_ton)
 
-			lcd.setCursor(12, 1);					   // Setz Curser auf Charakter 13, Zeile 2
-			lcd.print("   ");						   // Lösche die Zeile
-			lcd.setCursor(12, 1);					   // Setz Curser auf Charakter 13, Zeile 2
-			lcd.print(EEPROM.read(Encoder_count_neu)); // Speicherzellen-Inhalt anzeigen
-		} // end if (Encoder_count_neu != Encoder_count_alt)
-	} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
-
-} // end EEPROM_test
-
-//  ************************** Ende EEPROM TEST **************************************
+} //  end come_back(bool mit_ton)
 
 //  ************************** Anfang Service **************************************
 
 void service()
 {
-	unsigned int Encoder_count_store;
-	bool i_am_back = true; // Variable zur Rückkehrerkennung von den Test Routinen
-	bool mit_ton = false;  // Variable zum Ton abspielen
-	unsigned long start_time;
-	unsigned long wait_time = 750; //  Wartezeit in Millisekunden
+	int bl, bm, br; // Variablen für Becher auf LCD Schreiberkennung
 
-	// Array für die Test Routinen
-	const int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, TON_TEST,
-								 WAAGE_KALIBRIERUNG, WAAGE_TEST, RELAIS_TEST};
-	// berechnet die Anzahl der test_routinen
-	const int anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0]);
-
+	come_back(false);				 // Rückkehrerkennung einschalten ohne Ton
 	Encoder_count_neu = min_counter; // Erststartbedingung für Encoder herstellen
-	Encoder_count_alt = min_counter - 1;
-
-	on_off_encoder = true; // Encoder Interrupt einschalten
+	Encoder_count_alt = max_counter; // Erststartbedingung für Encoder herstellen
+	on_off_encoder = true;			 // Encoder Interrupt einschalten
 
 	do
 	{
-		if (i_am_back) // Wenn  zurück von den Test Routinen
-		{
-			min_counter = 0;
-			max_counter = anzahl_tests - 1;
-
-			Encoder_count_neu = Encoder_count_store;	 // recall neuen Encoderwert
-			Encoder_count_alt = Encoder_count_store - 1; // Startwert herstellen
-
-			lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
-			lcd.print("HW TEST  end:I/O"); //  Text in erster Zeile anzeigen
-			lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
-
-			if (mit_ton) //  Tonfolge abspielen
-			{
-				tone(TONE_PIN, 587);  // D4 (Re)
-				delay(300);			  // 300 ms warten
-				tone(TONE_PIN, 1587); // D5 (Mi)
-				delay(200);			  // 200 ms warten
-				noTone(TONE_PIN);	  // Alle Töne ausschalten
-				delay(500);			  // 500 ms warten
-
-				mit_ton = false; //  kein Ton ist default
-			} // end if (mit_ton)
-
-			i_am_back = false; // Rückkehrerkennung ausschalten
-
-		} //  end if (i_am_back)
-
 		if (Encoder_count_neu != Encoder_count_alt) // If count has changed
 		{
 			Encoder_count_alt = Encoder_count_neu;
@@ -93,15 +43,61 @@ void service()
 			switch (test_routinen[Encoder_count_neu]) //  Menüauswahl Zeile 1
 			{
 			case EEPROM_TEST:
-				lcd.print("EEPROM TEST  ENT"); // Text in zweiter Zeile anzeigen
-				break;						   //  end case EEPROM_TEST
+				lcd.print("EEPROM TEST :ENT"); // Text in zweiter Zeile anzeigen
+
+				//Serial.println("im case EEPROM_TEST");
+				//delay(400);
+				//Serial.println(digitalRead(ENTER_PIN));
+
+				if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
+				{
+					Serial.println("Enter Taste gedrueckt");
+
+					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+					lcd.print("EEPROM TEST :I/O");
+					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print("Adr:xxxx Dat:yyy");
+
+					min_counter = 0;					 // Minimalwert für Encoder
+					max_counter = MAX_EEPROM_ADRESSE;	 // Arduino Mega hat 4 KB (4096 Byts, 0-4095 bytes) EEPROM Zellen
+					Encoder_count_neu = min_counter;	 // Startwert für Encoder
+					Encoder_count_alt = min_counter - 1; // Startwert für Encoder
+
+					do
+					{
+						if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value to serial
+						{
+							Encoder_count_alt = Encoder_count_neu;
+
+							lcd.setCursor(4, 1);		  // Setz Curser auf Charakter 5, Zeile 2
+							lcd.print("    ");			  // Lösche die Zeile
+							lcd.setCursor(4, 1);		  // Setz Curser auf Charakter 5, Zeile 2
+							lcd.print(Encoder_count_neu); // Speicheradresse (0 - 4096) anzeigen
+
+							lcd.setCursor(13, 1);					   // Setz Curser auf Charakter 13, Zeile 2
+							lcd.print("   ");						   // Lösche die Zeile
+							lcd.setCursor(13, 1);					   // Setz Curser auf Charakter 13, Zeile 2
+							lcd.print(EEPROM.read(Encoder_count_neu)); // Daten der Adresse (FF = leer) anzeigen
+																	   /*
+																	   Beispiel der Datenspeicherung:
+																								  // EEPROM.put(0, daten);
+																								  // EEPROM.get(0, daten); // Lies die Datenstruktur aus der EEPROM-Adresse 1)
+																	   */
+						} // end if (Encoder_count_neu != Encoder_count_alt)
+					} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+
+					Encoder_count_neu = EEPROM_TEST; // Verbleib im Menü EEPROM Test
+			//		Encoder_count_alt = LED_TEST;	 // Startwert herstellen
+					come_back(true);				 // Rückkehrerkennung einschalten mit Ton
+				} //  if (!digitalRead(ENTER_PIN))
+				Encoder_count_alt = min_counter - 1;  // Damit Abfrage nach Enter Taste weiter läuft
+				break; //  end case EEPROM_TEST
 
 			case LED_TEST:
-				//  Direkt anzeigen, alle LED Blinken gleichzeitig, Takt: 750 ms
 				Encoder_count_store = Encoder_count_neu;
 
 				lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
-				lcd.print("   LED   TEST   "); // Text in zweiter Zeile anzeigen
+				lcd.print("LED TEST end:I/O"); // Text in erster Zeile anzeigen
 				lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
 				lcd.print("LED blinken: ");	   // Text in zweiter Zeile anzeigen
 
@@ -116,8 +112,8 @@ void service()
 
 					start_time = millis();
 
-					while (Encoder_count_neu == Encoder_count_alt &&
-						   (millis() - start_time < wait_time)) // 750 ms Sekunden warten
+					while (Encoder_count_neu == Encoder_count_alt && // logisches UND
+						   (millis() - start_time < wait_time))		 // 750 ms Sekunden warten
 					{
 					} // warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist
 
@@ -129,120 +125,156 @@ void service()
 
 					start_time = millis();
 
-					while (Encoder_count_neu == Encoder_count_alt &&
-						   (millis() - start_time < wait_time)) // 750 ms Sekunden warten
+					while (Encoder_count_neu == Encoder_count_alt && // logisches UND
+						   (millis() - start_time < wait_time))		 // 750 ms Sekunden warten
 					{
 					} // warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist
 				} while (Encoder_count_neu == Encoder_count_alt); //  solange bis encoder den Wert geändert hat
 
-				lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
-				lcd.print("                "); // Text in zweiter Zeile löschen
+				Encoder_count_alt = LED_TEST;
 
 				if (Encoder_count_neu > Encoder_count_store)
-					Encoder_count_store++; // Encoderwert erhöhen
+					Encoder_count_neu = BECHER_TEST; // Encoderwert erhöhen
 				else
-				{
-					if (Encoder_count_neu < Encoder_count_store)
-						Encoder_count_store--; // Encoderwert verringern
-											   // Encoderwert verringern
-				}
+					Encoder_count_neu = EEPROM_TEST; // Encoderwert verringern
 
-				mit_ton = false;  // Tonfolge abspielen: false ist default
-				i_am_back = true; // Rückkehrerkennung einschalten
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
 				break;			  //  end case LED_TEST
 
 			case BECHER_TEST:
-				lcd.print("BECHER TEST     ");
-				// Direkt anzeigen, da Becher Test keine Scrollen benötigt
+				bl = 2;
+				bm = 2;
+				br = 2;
+
+				Encoder_count_store = Encoder_count_neu;
+
+				lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
+				lcd.print("BECHER T end:I/O"); // Text in erster Zeile anzeigen
+				lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
+				lcd.print("L:    M:    R:  "); // Text in zweiter Zeile anzeigen OK und NO
+
+				do
+				{
+					// Becher Links
+					lcd.setCursor(2, 1);			 // Setz Curser auf Charakter 3, Zeile 2
+					if (!digitalRead(BL) && bl != 1) // Becher Links erkannt UND noch nicht auf LCD geschrieben
+					{
+						bl = 1; // Erkennung wurde bereits auf LCD geschrieben
+						lcd.print("OK");
+					}
+					else if (bl != 0)
+					{
+						bl = 0; // Erkennung wurde bereits auf LCD geschrieben
+						lcd.print("NO");
+					}
+
+					// Becher Mitte
+					lcd.setCursor(8, 1);			 // Setz Curser auf Charakter 9, Zeile 2
+					if (!digitalRead(BM) && bm != 1) // Becher Mitte erkannt UND noch nicht auf LCD geschrieben
+					{
+						bm = 1; // Erkennung wurde bereits auf LCD geschrieben
+						lcd.print("OK");
+					}
+					else if (bm != 0)
+					{
+						bm = 0; // Erkennung wurde bereits auf LCD geschrieben
+						lcd.print("NO");
+					}
+
+					// Becher Rechts
+					lcd.setCursor(14, 1);			 // Setz Curser auf Charakter 15, Zeile 2
+					if (!digitalRead(BR) && br != 1) // Becher Rechts erkannt UND noch nicht auf LCD geschrieben
+					{
+						br = 1; // Erkennung wurde bereits auf LCD geschrieben
+						lcd.print("OK");
+					}
+					else if (br != 0)
+					{
+						bm = 0; // Erkennung wurde bereits auf LCD geschrieben
+						lcd.print("NO");
+					}
+				} while (Encoder_count_neu == Encoder_count_alt); // warten bis Encoder den Wert geändert hat
+
+				Encoder_count_alt = BECHER_TEST;
+
+				if (Encoder_count_neu > Encoder_count_store)
+					Encoder_count_neu = TON_TEST; // Encoderwert erhöhen
+				else
+					Encoder_count_neu = LED_TEST; // Encoderwert verringern
+
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+
 				break; //  end case BECHER_TEST
 
 			case TON_TEST:
-				lcd.print("TON TEST     ENT");
-				break; //  end case TON_TEST
+				Encoder_count_store = Encoder_count_neu;
+
+				lcd.print("     Sirene     "); // Text in zweiter Zeile anzeigen
+
+				do
+				{
+					for (int i = 200; i <= 4000; i = i + 2) // Sirene aufwärts
+					{
+						tone(TONE_PIN, i);
+						delay(2); // 2 ms warten
+						if (Encoder_count_neu != Encoder_count_alt)
+							break;
+					}
+					if (Encoder_count_neu == Encoder_count_alt)
+						for (int i = 4000; i >= 200; i = i - 2) // Sirene abwärts
+						{
+
+							tone(TONE_PIN, i);
+							delay(2); // 2 ms warten
+							if (Encoder_count_neu != Encoder_count_alt)
+								break;
+						}
+
+				} while (Encoder_count_neu == Encoder_count_alt); // warten bis Encoder den Wert geändert hat
+
+				noTone(TONE_PIN); // Alle Töne ausschalten
+
+				Encoder_count_alt = TON_TEST;
+
+				if (Encoder_count_neu > Encoder_count_store)
+					Encoder_count_neu = ARM_TEST; // Encoderwert erhöhen
+				else
+					Encoder_count_neu = BECHER_TEST; // Encoderwert verringern
+
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				break;			  //  end case TON_TEST
+
+			case ARM_TEST:
+				Encoder_count_store = Encoder_count_neu;
+
+				lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+				lcd.print("    ARM TEST    ");
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				break;			  //  end case WAAGE_KALIBRIERUNG
 
 			case WAAGE_KALIBRIERUNG:
 				lcd.print("W KALIBRIER. ENT");
-				break; //  end case WAAGE_KALIBRIERUNG
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				break;			  //  end case WAAGE_KALIBRIERUNG
 
 			case WAAGE_TEST:
 				lcd.print("  WAAGE   TEST  ");
 				// Direkt anzeigen, da Waage Test keine Scrollen benötigt
-				break; //  end case WAAGE_TEST
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				break;			  //  end case WAAGE_TEST
 
 			case RELAIS_TEST:
-				lcd.print("  RELAIS  TEST  ");
+				lcd.print("RELAIS TEST  ENT");
 				// Direkt anzei
-				break; //  end case RELAIS_TEST
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				break;			  //  end case RELAIS_TEST
 			default:
-			lcd.print(Encoder_count_neu);	
-			lcd.print("  ?xx??xx??xx");
+				lcd.print(Encoder_count_neu);
+				lcd.print("  ?xx??xx??xx");
 				break; //  end default
 			} // end switch (Encoder_count_neu)
 		} // end if (Encoder_count_neu != Encoder_count_alt)
-
-		//--------------------- Wenn Entertaste gedrückt ist, also low --------------------
-		if (!digitalRead(ENTER_PIN))
-		{
-			lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-
-			switch (test_routinen[Encoder_count_neu]) //  Menüauswahl Zeile 2
-			{
-			case EEPROM_TEST:
-				lcd.print("EEPROM TEST  ENT");
-
-				Encoder_count_store = Encoder_count_neu; // Encoderwert Sicherung
-				EEPROM_test();
-				i_am_back = true; // Rückkehrerkennung einschalten
-				mit_ton = true;	  // Ton abspielen
-				break;			  // end case EEPROM_TEST
-
-			case LED_TEST:
-				//  wird im ersten Menue bearbeitet
-				//  alle LED Blinken gleichzeitig
-				break; //  end case LED_TEST
-
-			case BECHER_TEST:
-				lcd.print("BECHER TEST     ");
-				// Direkt anzeigen, da Becher Test keine Scrollen benötigt
-				break; //  end case BECHER_TEST
-
-			case TON_TEST:
-				lcd.print("TON TEST     ENT");
-				break; //  end case TON_TEST
-
-			case WAAGE_KALIBRIERUNG:
-				lcd.print("W KALIBRIER. ENT");
-				break; //  end case WAAGE_KALIBRIERUNG
-
-			case WAAGE_TEST:
-				lcd.print("  WAAGE   TEST  ");
-				// Direkt anzeigen, da Waage Test keine Scrollen benötigt
-				break; //  end case WAAGE_TEST
-
-			case RELAIS_TEST:
-				//on_off_encoder = false; // Encoder Interrupt ausschalten
-				lcd.setCursor(0, 1);	// Setz Curser auf Charakter 1, Zeile 2
-				lcd.print(relais[Encoder_count_neu]);
-
-				digitalWrite(relais[Encoder_count_neu], EIN); // Relais einschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
-
-				while (!digitalRead(ENTER_PIN))
-				{
-				}; // Relais halten bis Enter Taste losgelassen
-
-				digitalWrite(relais[Encoder_count_neu], AUS); // Relais ausschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
-
-				on_off_encoder = true; // Encoder Interrupt einschalten
-				break;
-
-			default:
-				lcd.print("??xx??xx??xx ");
-				lcd.print(Encoder_count_neu);
-				break; //  end default
-			} // end switch (Encoder_count_neu)
-
-		} // if(!digitalRead(ENTER_PIN))
-	} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+	} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt ist, also high ist
 } // end service
 
 //  ************************** Service Ende **************************************

@@ -4,6 +4,7 @@
  *      INCLUDE DEFINITIONEN  Anfang        *
  *******************************************/
 #include <HX711.h>
+#include <Arduino.h>
 //  Waage mit AD Wandler HX711
 //  Library von Bogdan Necula
 
@@ -143,14 +144,6 @@
 					 // Stützbunkt bei 20 poligem Stecker (Pin 19 und 20), Brücke zu GND
 // Ende Flachbandkabel 20 Pin zur Relaiskarte
 
-#define EEPROM_TEST 0
-#define LED_TEST 1
-#define BECHER_TEST 2
-#define TON_TEST 3
-#define WAAGE_KALIBRIERUNG 4
-#define WAAGE_TEST 5
-#define RELAIS_TEST 6
-
 /******************************************
  *      HARDWARE DEFINITIONEN  Ende        *
  *******************************************/
@@ -187,10 +180,23 @@
 #define FAST_INCREMENT 10
 
 // Arduino Mega hat 4 KB (4096 bytes) EEPROM Zellen, also 0 bis 4095
-#define MAX_EEPROM_ADRESSE 4095 // 0xFF (255) Wert für leere EEPROM Zelle
+#define MAX_EEPROM_ADRESSE 4095 
 
 // Maximal messbares Gewicht in Gramm
 #define MAX_GEWICHT 3000
+
+// Wartezeit zur Tastenverzögerung in ms
+#define WAIT_TIME_1 750
+
+// Benennung der Service Test Routinen
+#define EEPROM_TEST 		0
+#define LED_TEST 			1
+#define BECHER_TEST			2
+#define TON_TEST 			3
+#define ARM_TEST		 	4
+#define WAAGE_KALIBRIERUNG 	5
+#define WAAGE_TEST 			6
+#define RELAIS_TEST			7
 
 /******************************************
  *      KONSTANTEN DEFINITIONEN  Ende      *
@@ -223,12 +229,13 @@ extern unsigned int Anzeige_alt;
 extern bool on_off_encoder;
 
 // Zahlenwert im Encoder
-extern unsigned int Encoder_count_neu;
-extern unsigned int Encoder_count_alt;
+extern  int Encoder_count_neu;
+extern  int Encoder_count_alt;
+extern  int Encoder_count_store;
 
 // definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
-extern unsigned int max_counter;
-extern unsigned int min_counter;
+extern  int max_counter;
+extern  int min_counter;
 
 // definition der Encoder Zeitabständen in Mikrosekunden
 extern unsigned long _lastIncReadTime;
@@ -241,6 +248,14 @@ extern const unsigned int relais[];
 //  Relais 1 bis 9 sind Motoren, Rüttler und Ventile, Relais 10 ist die Wasserpumpe
 //  Relais 11 bis 16 sind defekt, da sie nicht mehr auf der Relaiskarte vorhanden sind
 extern const unsigned int anzahlrelais;
+
+extern unsigned long start_time;
+extern	unsigned long wait_time; //  Wartezeit in Millisekunden
+
+	// Array für die Test Routinen
+//extern const int test_routinen[]; 
+	// berechnet die Anzahl der test_routinen
+//extern const int anzahl_tests;
 
 extern const unsigned int positiveTones[]; // Positive Töne
 extern const unsigned int negativeTones[]; // Negative Töne
@@ -255,14 +270,16 @@ extern const unsigned int anzahl_tests;
 
 struct datensatz    // Structure declaration
 {						 
-	char ueberschrift[MAX_CHARAKTERS]; // Gibssorte 10 Charakters (0 bis 9)
-	unsigned int xgesamt_gewicht;
-	unsigned int xmischverhaeltnis;
-	unsigned int xgewicht[MAX_DATEN_SATZ]; // Array für die Gewichte der einzelnen Komponenten
+	String ueberschrift; // Gibssorte 10 Charakters (0 bis 9)
+	unsigned int gesamt_gewicht;
+	unsigned int mischverhaeltnis;
+	unsigned int gewicht[MAX_DATEN_SATZ]; // Array für die Gewichte der einzelnen Komponenten
 }; // Structure variable
-
 extern datensatz daten[MAX_ARM_POS]; // Array of structures (0 bis 2) für die Armpositionen
 
+// Array of structures (0 bis 2) für die Armpositionen
+ 
+void init_data();
 
 /******************************************
  *      VARIABLEN DEFINITIONEN  Ende        *
