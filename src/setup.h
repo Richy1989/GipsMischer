@@ -168,12 +168,7 @@
 #define BECHER_MITTE 1
 #define BECHER_RECHTS 2
 #define NO_BECHER 3
-/*
-#define MAX_DATEN_SATZ 3
-#define MAX_MOTOREN 3
-#define MAX_RUETTLER 3
-#define MAX_VENTILE 3
-*/
+
 #define MAX_DATEN_SATZ 3 // Anzahl der Datensätze, die in der EEPROM gespeichert werden können
 #define MAX_CHARAKTERS 10 // Anzahl der Zeichen in der Überschrift
 
@@ -221,12 +216,16 @@ extern float Gewicht_alt;
 extern float Korrekturfaktor;
 
 extern unsigned int armposition;
+extern unsigned int armposition_alt;
 
 extern unsigned int Anzeige;
 extern unsigned int Anzeige_alt;
 
 // steuerung des Encoder Interrupts. Nur wenn der Encoder in Funktion sein soll
 extern bool on_off_encoder;
+
+// zum Abbruch einet Funktion
+extern bool abbruch;
 
 // Zahlenwert im Encoder
 extern  int Encoder_count_neu;

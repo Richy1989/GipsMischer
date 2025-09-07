@@ -24,8 +24,15 @@ int Encoder_count_store = 0; // Sicherung des Encoderwertes
 int max_counter = 500;
 int min_counter = 0;
 
+// Arm - Positionsspeicherung
+unsigned int armposition;
+unsigned int armposition_alt;
+
 // steuerung des Encoder Interrupts. Nur wenn der Encoder in Funktion sein soll
 bool on_off_encoder = false;
+
+// zum Abbruch einet Funktion
+ bool abbruch = false;
 
 // definition der Encoder Zeitabständen in Mikrosekunden
 unsigned long _lastIncReadTime = micros();
@@ -62,7 +69,6 @@ const unsigned int anzahldaten = sizeof(daten) / sizeof(daten[0]); // Anzahl der
 
 void init_data()
 {
-
  daten[0].ueberschrift = "Gips A"; // Beispiel Initialisierung der Überschrift
  daten[0].gesamt_gewicht = 0;  	// Beispiel Initialisierung des Gesamtgewichts
  daten[0].mischverhaeltnis = 0; 	// Beispiel Initialisierung der Mischverhältnis
