@@ -59,7 +59,7 @@ unsigned long wait_time = WAIT_TIME_1; // Wartezeit in Millisekunden
 
 // Array für die Test Routinen
 const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, TON_TEST,
-							          ARM_TEST, WAAGE_KALIBRIERUNG, WAAGE_TEST, RELAIS_TEST};
+							          ARM_TEST, WAAGE_KALIBRIERUNG, WAAGE_TEST, RELAIS_TEST, DATA_RESET};
 // berechnet die Anzahl der test_routinen
 const unsigned anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0]);
 

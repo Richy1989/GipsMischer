@@ -14,7 +14,7 @@ void read_encoder()
 	// nur wenn Encoder freigeschalten (true), soll interrupt Routine arbeiten
 	if (on_off_encoder)
 	{
-	//	Serial.println("Interrupt");
+		//	Serial.println("Interrupt");
 
 		old_AB <<= 2; // Remember previous state
 
@@ -142,9 +142,9 @@ void setup()
 	// pinMode(CLOCK_PIN, OUTPUT); // Clock PIN
 	scale.begin(DATA_PIN, CLOCK_PIN); // dataPin =20, clockPin = 21, gain = 128 / Interruptfähige Pins
 
-	//Cal init in setup
+	// Cal init in setup
 	init_data();
-	 //daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
+	// daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
 
 } // end setup **********************************************************************
 
@@ -157,8 +157,15 @@ void loop()
 
 	////////////////////////////////// Service Routine Anfang ///////////////////////////////////////////
 	service(); // Aufruf der Service Routine
-	////////////////////////////////// TService Routine Ende ///////////////////////////////////////////
+			   ////////////////////////////////// TService Routine Ende ///////////////////////////////////////////
 
+	while (true)
+	{
+		lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
+		lcd.print("  ungeplanter   "); // Zeile löschen
+		lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
+		lcd.print("  Ruecksprung   "); // Zeile löschen
+	} // end while true
 
 	//  ************************** Waage Kalibrierung Anfang **************************************
 

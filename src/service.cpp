@@ -29,12 +29,11 @@ void service()
 {
 	// Variablen für Becher auf LCD Schreiberkennung
 	bool bl_LCD_NO, bm_LCD_NO, br_LCD_NO, bl_LCD_OK, bm_LCD_OK, br_LCD_OK;
-	abbruch = false;
 
 	come_back(false); // Rückkehrerkennung einschalten ohne Ton
 
 	Encoder_count_neu = EEPROM_TEST;
-	Encoder_count_alt = RELAIS_TEST; // Erststartbedingung herstellen
+	Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
 	on_off_encoder = true; // Encoder Interrupt einschalten
 
@@ -54,9 +53,14 @@ void service()
 				// delay(400);
 				// Serial.println(digitalRead(ENTER_PIN));
 
+				Encoder_count_store = Encoder_count_neu;
+
 				if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
 				{
-					//		Serial.println("Enter Taste gedrueckt");
+
+					Serial.println("vor Speicherung");
+					Serial.println(Encoder_count_neu);
+					delay(700);
 
 					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
 					lcd.print("EEPROM TEST :I/O");
@@ -67,7 +71,7 @@ void service()
 					min_counter = 0;
 					max_counter = MAX_EEPROM_ADRESSE; // Mega hat 4 KB (4096 Byts, 0-4095 bytes) EEPROM Zellen
 
-					Encoder_count_neu = min_counter;	 // Routinenwiedereintritt herstellen
+					Encoder_count_neu = min_counter;
 					Encoder_count_alt = min_counter - 1; // Routinenwiedereintritt herstellen
 
 					do
@@ -85,21 +89,39 @@ void service()
 							lcd.print("   ");						   // Lösche die Zeile
 							lcd.setCursor(13, 1);					   // Setz Curser auf Charakter 13, Zeile 2
 							lcd.print(EEPROM.read(Encoder_count_neu)); // Daten der Adresse (FF = leer) anzeigen
-																	   /*
-																		   Beispiel der Datenspeicherung:
-																		  // EEPROM.put(0, daten);
-																		  // EEPROM.get(0, daten); // Lies die Datenstruktur aus der EEPROM-Adresse 1)
-																	   */
+
+							/*
+								Beispiel der Datenspeicherung:
+							   // EEPROM.put(0, daten);
+							   // EEPROM.get(0, daten); // Lies die Datenstruktur aus der EEPROM-Adresse 1)
+							*/
+
 						} // end if (Encoder_count_neu != Encoder_count_alt)
-					} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+					} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt ist, also high ist
 
 					come_back(true); // Rückkehrerkennung einschalten, Encoder Grenzen setzen, mit Ton
 
+					while (!digitalRead(I_O_PIN)) // warten bis I/O Taste losgelasen
+					{
+					}
+
 					Encoder_count_neu = EEPROM_TEST;
+
 				} //  end  if (!digitalRead(ENTER_PIN))
 
-				Encoder_count_alt = OUT_OF_RANGE; // Damit Abfrage nach Enter Taste weiter läuft
-				break;							  //  end case EEPROM_TEST
+				if (Encoder_count_neu != Encoder_count_store)
+				{
+					if (Encoder_count_neu > ARM_TEST && Encoder_count_neu <= anzahl_tests - 1)
+						Encoder_count_neu = anzahl_tests - 1; // anzahl_tests - 1; // Encoderwert verringern (Übertrag) = DATA_RESET
+					else
+						Encoder_count_neu = LED_TEST; // Encoderwert erhöhen
+				} //  end  if (Encoder_count_neu != EEPROM_TEST)
+
+				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+				come_back(false); // Rückkehrerkennung einschalten, Encoder Grenzen setzen, mit Ton
+
+				break; //  end case EEPROM_TEST
 
 			case LED_TEST:
 				Encoder_count_store = Encoder_count_neu;
@@ -123,6 +145,8 @@ void service()
 					while (Encoder_count_neu == Encoder_count_alt && // logisches UND
 						   (millis() - start_time < wait_time))		 // 750 ms Sekunden warten
 					{
+						if (!digitalRead(I_O_PIN))
+							return; // Bedinerabbruch, Rückkehr ins Hauptmenü
 					} // warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist
 
 					lcd.setCursor(13, 1); // Setz Curser auf Charakter 14, Zeile 2
@@ -136,6 +160,8 @@ void service()
 					while (Encoder_count_neu == Encoder_count_alt && // logisches UND
 						   (millis() - start_time < wait_time))		 // 750 ms Sekunden warten
 					{
+						if (!digitalRead(I_O_PIN))
+							return; // Bedinerabbruch, Rückkehr ins Hauptmenü
 					} // warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist
 				} while (Encoder_count_neu == Encoder_count_alt); //  solange bis encoder den Wert geändert hat
 
@@ -223,6 +249,9 @@ void service()
 						lcd.print("NO");
 					} // end  if (!br_LCD_NO)
 
+					if (!digitalRead(I_O_PIN))
+						return; // Bedinerabbruch, Rückkehr ins Hauptmenü
+
 				} while (Encoder_count_neu == Encoder_count_alt); // warten bis Encoder den Wert geändert hat
 
 				if (Encoder_count_neu > Encoder_count_store)
@@ -238,7 +267,9 @@ void service()
 
 			case TON_TEST:
 				Encoder_count_store = Encoder_count_neu;
-
+				lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
+				lcd.print("TON TEST    :I/O"); // Text in erster Zeile anzeigen
+				lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 2, Zeile 1
 				lcd.print("     Sirene     "); // Text in zweiter Zeile anzeigen
 
 				do
@@ -247,22 +278,25 @@ void service()
 					{
 						tone(TONE_PIN, i);
 						delay(2); // 2 ms warten
-						if (Encoder_count_neu != Encoder_count_alt)
+						if (Encoder_count_neu != Encoder_count_alt || !digitalRead(I_O_PIN))
 							break;
-					}
-					if (Encoder_count_neu == Encoder_count_alt)
+					} //  end  for (int i = 200; i <= 4000; i = i + 2) // Sirene aufwärts
+
+					if (Encoder_count_neu == Encoder_count_alt && !digitalRead(I_O_PIN))
 						for (int i = 4000; i >= 200; i = i - 2) // Sirene abwärts
 						{
-
 							tone(TONE_PIN, i);
 							delay(2); // 2 ms warten
-							if (Encoder_count_neu != Encoder_count_alt)
+							if (Encoder_count_neu != Encoder_count_alt || !digitalRead(I_O_PIN))
 								break;
-						}
+						} //  end  for (int i = 4000; i >= 200; i = i - 2) // Sirene abwärts
 
-				} while (Encoder_count_neu == Encoder_count_alt); // warten bis Encoder den Wert geändert hat
+				} while (Encoder_count_neu == Encoder_count_alt && digitalRead(I_O_PIN)); // warten bis Encoder den Wert geändert hat
 
 				noTone(TONE_PIN); // Alle Töne ausschalten
+
+				if (!digitalRead(I_O_PIN))
+					return; // Bedinerabbruch, Rückkehr ins Hauptmenü
 
 				if (Encoder_count_neu > Encoder_count_store)
 					Encoder_count_neu = ARM_TEST; // Encoderwert erhöhen
@@ -280,8 +314,8 @@ void service()
 				lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
 				lcd.print("ARM TEST    :I/O"); // Text in erster Zeile anzeigen
 
-				armposition = ARM_NO_POS; // keine Position, Startwert
-				armposition_alt = 255;	  // Startwert für Erstanfang
+				armposition = ARM_NO_POS;		// keine Position, Startwert
+				armposition_alt = OUT_OF_RANGE; // Startwert für Erstanfang
 
 				do
 				{
@@ -325,6 +359,10 @@ void service()
 
 						} // end (armposition != armposition_alt) if (!digitalRead(AL))
 					} //  end else   if (!digitalRead(AL))
+
+					if (!digitalRead(I_O_PIN))
+						return; // Bedinerabbruch, Rückkehr ins Hauptmenü
+
 				} while (Encoder_count_neu == Encoder_count_alt); // warten bis Encoder den Wert geändert hat
 
 				if (Encoder_count_neu > Encoder_count_store)
@@ -338,12 +376,6 @@ void service()
 				break;			  //  end case ARM_TEST
 
 			case WAAGE_KALIBRIERUNG:
-				if (abbruch) // es erfolgte ein Bedinerabbruch, daher LCD wieder aktualisieren
-				{
-					abbruch = false;  // Abbruch zurücksetzen
-					come_back(false); // Rückkehrerkennung einschalten ohne Ton
-				} //  if (abbruch)
-
 				lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 1
 				lcd.print("W. KALIBRI. :ENT");
 
@@ -352,169 +384,115 @@ void service()
 					on_off_encoder = false; // Encoder Interrupt ausschalten
 
 					Encoder_count_store = Encoder_count_neu;
-					abbruch = false;
 
 					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
 					lcd.print("Tara        :I/O");
 					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-					lcd.print(" wird ermittelt  ");
+					lcd.print(" wird ermittelt ");
 
-					while (!scale.is_ready()) // scale.is_ready --> Waage ist bereit wenn true
+					while (!scale.is_ready() && digitalRead(I_O_PIN)) // scale.is_ready --> Waage ist bereit wenn true
 					{
-						if (!digitalRead(I_O_PIN)) // Bedienerabbruch der Kalibrierung
+					} // warten bis die Waage bereit ist oder Bedienrabbruch
+
+					if (digitalRead(I_O_PIN)) // weiter wenn I/O nicht gedrückt wurde
+					{
+						Leergew_einheiten = scale.read_average(20); // Leergewicht einlesen, Durchschnitt von 20 Messungen
+
+						lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+						lcd.print("            :ENT");
+						lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+						lcd.print(Leergew_einheiten);
+
+						while (digitalRead(ENTER_PIN) && digitalRead(I_O_PIN)) // negatve Logik, warten auf Bestätigung des Leergewichtwertes,
+						{													   // weiter mit ENTER oder I/O Taste (Bedienrabbruch)
+						} // zum ansehen der Leergewichteinheiten, weiter mit ENTER oder I/O Taste (Bedienrabbruch)
+
+						if (digitalRead(I_O_PIN)) // weiter wenn I/O nicht gedrückt wurde
 						{
-							abbruch = true;
-							break; // bricht.... while (!scale.is_ready() )
-						}
-					} // warten bis die Waage bereit ist
+							lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+							lcd.print("G. auflegen :I/O");
+							lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+							lcd.print("bereit ?    :ENT");
 
-					if (abbruch)
+							while (!digitalRead(ENTER_PIN)) // warten bis Enter taste losgelasen wird
+							{
+								// Wird nicht auf I/O Taste (Bedienrabbruch) getestet
+							};
+							delay(5); // Entprellzeit
+
+							while (digitalRead(ENTER_PIN) && digitalRead(I_O_PIN))
+							{
+							} // auf Bestätigung des Gewichtauflegen warten, weiter mit ENTER oder I/O Taste (Bedienrabbruch)
+
+							if (digitalRead(I_O_PIN)) // weiter wenn I/O nicht gedrückt wurde
+							{
+								lcd.setCursor(0, 0); // Set cursor to column 1, row 1
+								lcd.print("G. eingeben :I/O");
+								lcd.setCursor(0, 1); // Set cursor to column 1, row 2
+								lcd.print("Netto      g:ENT");
+
+								min_counter = 0;		   // Encounter Min. Wert
+								max_counter = MAX_GEWICHT; // Encounter Max. Wert, Maximales messbares Gewicht in Gramm
+								Encoder_count_neu = min_counter;
+								Encoder_count_alt = min_counter - 1;
+
+								while (!digitalRead(ENTER_PIN)) // warten bis Enter taste losgelasen wird
+								{
+									// Wird nicht auf I/O Taste (Bedienrabbruch) getestet
+								};
+								delay(5); // Entprellzeit
+
+								on_off_encoder = true;								   // Encoder Interrupt einschalten
+																					   // Sollgewicht eingeben
+								while (digitalRead(ENTER_PIN) && digitalRead(I_O_PIN)) // warten auf Bestätigung des eingegebenen Gewichtwertes, weiter mit ENTER oder I/O Taste )
+								{
+
+									if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value
+									{
+										Encoder_count_alt = Encoder_count_neu;
+
+										lcd.setCursor(6, 1);		  // Set cursor to column 7, row 2
+										lcd.print("    ");			  // Clear previous value
+										lcd.setCursor(6, 1);		  // Set cursor to column 7, row 2
+										lcd.print(Encoder_count_neu); // im Encoder_count_neu steht das Gewicht in Gramm
+									} // end if (Encoder_count_neu != Encoder_count_alt)
+
+								} // end  while (digitalRead(ENTER_PIN) && digitalRead(I_O_PIN))
+								// Bestätigung des eingegebenen Gewichtwertes, weiter mit ENTER oder I/O Taste (Bedienerabbruch)
+
+								if (digitalRead(I_O_PIN)) // weiter wenn I/O nicht gedrückt wurde
+								{
+									on_off_encoder = false; // Encoder Interrupt ausschalten
+
+									while (!scale.is_ready() && digitalRead(I_O_PIN)) // scale.is_ready --> Waage ist bereit wenn true
+									{
+									} // warten bis die Waage bereit ist oder I/O Taste gedrückt wird
+
+									if (digitalRead(I_O_PIN)) // weiter wenn I/O nicht gedrückt wurde
+									{
+										Eichgew_einheiten = scale.read_average(3); // Waagenwert einlesen, Durchschnitt von 3 Messungen
+
+										// Differenz der Gewichtseinheit minus der Leereinheitdurch,
+										// Dividiert durch das eingegeben Gewicht in Gramm (Encoder_count_neu)
+										Korrekturfaktor = (Eichgew_einheiten - Leergew_einheiten) / Encoder_count_neu;
+										/*
+											/////////////////////////////// Korekturwert und Leergew_einheiten im EEPROM abspeichern !!!!!!!!!!!!!!!
+										*/
+										//									Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
+										//									come_back(true);						 // Rückkehrerkennung einschalten mit Ton
+									} // end if (digitalRead(I_O_PIN))
+								} // end if (digitalRead(I_O_PIN))
+							} // end if (digitalRead(I_O_PIN))
+						} // end if (digitalRead(I_O_PIN))
+					} // end if (digitalRead(I_O_PIN))
+
+					while (!digitalRead(I_O_PIN)) // warten bis I/O Taste losgelasen wird
 					{
-						abbruch = false;						 // Abbruch zurücksetzen
-						Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
-						Encoder_count_alt = OUT_OF_RANGE;		 // Erststartbedingung herstellen
+					}
 
-						on_off_encoder = true; // Encoder Interrupt einschalten
-						break;				   // case WAAGE_KALIBRIERUNG
-					} //  end if (abbruch)
-
-					Leergew_einheiten = scale.read_average(20); // Leergewicht einlesen, Durchschnitt von 20 Messungen
-
-					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-					lcd.print("            :ENT");
-					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-					lcd.print(Leergew_einheiten);
-
-					while (digitalRead(ENTER_PIN))
-					{
-						if (!digitalRead(I_O_PIN)) // Bedienerabbruch der Kalibrierung
-						{
-							abbruch = true;
-
-							break; // bricht  while (digitalRead(ENTER_PIN) )
-
-						} // end if (!digitalRead(I_O_PIN)
-					} // zum ansehen der Leergewichteinheiten, weiter mit ENTER oder I/O Taste (abbruch)
-
-					if (abbruch)
-					{
-						abbruch = false;						 // Abbruch zurücksetzen
-						Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
-						Encoder_count_alt = OUT_OF_RANGE;		 // Erststartbedingung herstellen
-
-						on_off_encoder = true; // Encoder Interrupt einschalten
-						break;				   // case WAAGE_KALIBRIERUNG
-					} //  end if (abbruch)
-
-					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-					lcd.print("G. auflegen :I/O");
-					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-					lcd.print("fertig      :ENT");
-
-					while (!digitalRead(ENTER_PIN)) // warten bis Enter taste losgelasen wird
-					{
-					};
-					delay(5); // Entprellzeit
-
-					while (digitalRead(ENTER_PIN))
-					{
-						if (!digitalRead(I_O_PIN)) // Bedienerabbruch der Kalibrierung
-						{
-							abbruch = true;
-							break; // while (digitalRead(I_O_PIN) || digitalRead(ENTER_PIN))
-						}
-
-					} // auf Bestätigung des Gewichtauflegen warten, weiter mit ENTER oder I/O Taste (abbruch)
-
-					if (abbruch)
-					{
-						abbruch = false;						 // Abbruch zurücksetzen
-						Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
-						Encoder_count_alt = OUT_OF_RANGE;		 // Erststartbedingung herstellen
-
-						on_off_encoder = true; // Encoder Interrupt einschalten
-						break;				   // case WAAGE_KALIBRIERUNG
-					} //  end if (abbruch)
-
-					lcd.setCursor(0, 0); // Set cursor to column 1, row 1
-					lcd.print("G. eingeben :I/O");
-					lcd.setCursor(0, 1); // Set cursor to column 1, row 2
-					lcd.print("Netto      g:ENT");
-
-					min_counter = 0;		   // Encounter Min. Wert
-					max_counter = MAX_GEWICHT; // Encounter Max. Wert, Maximales messbares Gewicht in Gramm
-					Encoder_count_neu = min_counter;
-					Encoder_count_alt = min_counter - 1;
-
-					while (!digitalRead(ENTER_PIN)) // warten bis Enter taste losgelasen wird
-					{
-					};
-
-					delay(5); // Entprellzeit
-
-					on_off_encoder = true; // Encoder Interrupt einschalten
-
-					while (digitalRead(ENTER_PIN))
-					{
-						if (!digitalRead(I_O_PIN)) // Bedienerabbruch der Kalibrierung
-						{
-							abbruch = true;
-							break; // end do... while (digitalRead(ENTER_PIN))
-						}
-
-						if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value
-						{
-							Encoder_count_alt = Encoder_count_neu;
-
-							lcd.setCursor(6, 1);		  // Set cursor to column 7, row 2
-							lcd.print("    ");			  // Clear previous value
-							lcd.setCursor(6, 1);		  // Set cursor to column 7, row 2
-							lcd.print(Encoder_count_neu); // im Encoder_count_neu steht das Gewicht in Gramm
-						} // end if (Encoder_count_neu != Encoder_count_alt)
-
-					} // Bestätigung des eingegebenen Gewichtwertes, weiter mit ENTER oder I/O Taste (abbruch)
-
-					on_off_encoder = false; // Encoder Interrupt ausschalten
-
-					if (abbruch)
-					{
-						abbruch = false;						 // Abbruch zurücksetzen
-						Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
-						Encoder_count_alt = OUT_OF_RANGE;		 // Erststartbedingung herstellen
-
-						on_off_encoder = true; // Encoder Interrupt einschalten
-						break;				   // case WAAGE_KALIBRIERUNG
-					} // end if (abbruch)
-
-					while (!scale.is_ready())
-					{
-						if (!digitalRead(I_O_PIN)) // Bedienerabbruch der Kalibrierung
-						{
-							abbruch = true;
-							break; //  bricht  while (!scale.is_ready())
-						}
-					} // warten bis die Waage bereit ist oder I/O Taste (abbruch) gedrückt wird
-
-					if (abbruch)
-					{
-						abbruch = false;						 // Abbruch zurücksetzen
-						Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
-						Encoder_count_alt = OUT_OF_RANGE;		 // Erststartbedingung herstellen
-
-						on_off_encoder = true; // Encoder Interrupt einschalten
-
-						break; // case WAAGE_KALIBRIERUNG
-					} //  end if (abbruch)
-
-					Eichgew_einheiten = scale.read_average(3); // Waagenwert einlesen, Durchschnitt von 3 Messungen
-
-					// Differenz der Gewichtseinheit minus der Leereinheitdurch,
-					// Dividiert durch das eingegeben Gewicht in Gramm (Encoder_count_neu)
-					Korrekturfaktor = (Eichgew_einheiten - Leergew_einheiten) / Encoder_count_neu;
-					/////////////////////////////// Korekturwert im EEPROM abspeichern ***************
-					/////////////////////////////// Leergew_einheiten im EEPROM abspeichern ***************
 					Encoder_count_neu = Encoder_count_store; // Verbleib im Menü WAAGE_KALIBRIERUNG
-					come_back(true);						 // Rückkehrerkennung einschalten mit Ton
+					come_back(true);
+
 				} // end if (!digitalRead(ENTER_PIN))
 
 				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
@@ -544,12 +522,18 @@ void service()
 						lcd.print((unsigned int)Gewicht); // Gewicht anzeigen, casten auf unsigned int
 					} // end if (Gewicht != Gewicht_alt)
 
-				} while (Encoder_count_neu == Encoder_count_alt); // warten bis Encoder den Wert geändert hat
+				} while (Encoder_count_neu == Encoder_count_alt && digitalRead(I_O_PIN)); // warten bis Encoder den Wert geändert hat oder Bedienerabbruch
 
-				if (Encoder_count_neu > Encoder_count_store)
-					Encoder_count_neu = RELAIS_TEST; // Encoderwert erhöhen
-				else
-					Encoder_count_neu = WAAGE_KALIBRIERUNG; // Encoderwert verringern
+				if (!digitalRead(I_O_PIN))
+					return; // Bedinerabbruch, Rückkehr ins Hauptmenü
+
+				if (Encoder_count_neu != Encoder_count_store)
+				{
+					if (Encoder_count_neu > Encoder_count_store)
+						Encoder_count_neu = RELAIS_TEST; // Encoderwert erhöhen
+					else
+						Encoder_count_neu = WAAGE_KALIBRIERUNG; // Encoderwert verringern
+				}
 
 				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
@@ -562,17 +546,19 @@ void service()
 
 				if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
 				{
+
+					while (!digitalRead(ENTER_PIN)) // warten bis Enter taste losgelasen wird
+					{
+						// Wird nicht auf I/O Taste (Bedienrabbruch) getestet
+					};
+					delay(5); // Entprellzeit
+
 					Encoder_count_store = Encoder_count_neu;
 
-					on_off_encoder = true; // Encoder Interrupt einschalten
-
 					min_counter = 0;
-					max_counter = anzahlrelais - 1;		 // zur Adressierug des relais Arryas
-					Encoder_count_neu = min_counter;	 // Startwert für Encoder; unterschiedlich, damit beim ersten Durchgang sofort ausgeführt wird
-					Encoder_count_alt = min_counter - 1; // Erststartbedingung für Encoder herstellen
-
-					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-					lcd.print("RELAIS TEST :I/O");
+					max_counter = anzahlrelais - 1;	  // zur Adressierug des relais Arryas
+					Encoder_count_neu = min_counter;  // Startwert für Encoder; unterschiedlich, damit beim ersten Durchgang sofort ausgeführt wird
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung für Encoder herstellen
 
 					on_off_encoder = true; // Encoder Interrupt einschalten
 
@@ -596,13 +582,13 @@ void service()
 								lcd.print("G.Mot.Recht :ENT");
 								break;
 							case RELAIS_RL:
-								lcd.print("Rüttl.Links :ENT");
+								lcd.print("Ruett.Links :ENT");
 								break;
 							case RELAIS_RM:
-								lcd.print("Rüttl.Mitte :ENT");
+								lcd.print("Ruett.Mitte :ENT");
 								break;
 							case RELAIS_RR:
-								lcd.print("Rüttl.Rechts:ENT");
+								lcd.print("Ruett.Rechts:ENT");
 								break;
 							case RELAIS_VL:
 								lcd.print("W.Vent.Links:ENT");
@@ -618,7 +604,7 @@ void service()
 								break;
 							default:
 								lcd.print(Encoder_count_neu);
-								lcd.print("  ?xx??xx??xx");
+								lcd.print("ER: case Relai");
 								break;
 							} // end switch (Encoder_count_neu)
 						} // end if (Encoder_count_neu != Encoder_count_alt)
@@ -626,49 +612,74 @@ void service()
 						if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
 						{
 							on_off_encoder = false; // Encoder Interrupt ausschalten
-							lcd.setCursor(0, 1);	// Setz Curser auf Charakter 1, Zeile 2
-							lcd.print(relais[Encoder_count_neu]);
+													//						lcd.setCursor(0, 1);	// Setz Curser auf Charakter 1, Zeile 2
+													//						lcd.print(relais[Encoder_count_neu]);
 
 							digitalWrite(relais[Encoder_count_neu], EIN); // Relais einschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
 
-							while (!digitalRead(ENTER_PIN))
+							while (!digitalRead(ENTER_PIN) && digitalRead(I_O_PIN)) // warten bis Enter taste losgelasen
 							{
 							} // Relais halten bis Enter Taste losgelassen
 
 							digitalWrite(relais[Encoder_count_neu], AUS); // Relais ausschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
 
 							on_off_encoder = true; // Encoder Interrupt einschalten
-						} // if(!digitalRead(ENTER_PIN))
+						} // end  if (!digitalRead(ENTER_PIN))
 
 					} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
 
-					/*	lcd.setCursor(0, 1); // Setze Cursor auf die 1. Stelle der 2. Zeile
-						lcd.print(Encoder_count_neu);
-						lcd.print("  //  "); // Clear previous value
-						delay(1000);
-					*/
+					if (Encoder_count_neu > Encoder_count_store)
+						Encoder_count_neu = DATA_RESET; // Encoderwert erhöhen
+					else
+						Encoder_count_neu = WAAGE_TEST; // Encoderwert verringern
 
-					if (Encoder_count_neu != RELAIS_TEST)
-					{
-						if (Encoder_count_neu >= EEPROM_TEST && Encoder_count_neu < ARM_TEST)
-							Encoder_count_neu = EEPROM_TEST; // Encoderwert erhöhen, (ACHTUNG Zählerübertrag)
-						else
-							Encoder_count_neu = WAAGE_TEST; // Encoderwert verringern
-					}
-				} // end if (!digitalRead(ENTER_PIN))
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung innere Schleife herstellen
+
+				} // end  if (!digitalRead(ENTER_PIN))
+
+				if (!digitalRead(I_O_PIN))
+					come_back(true); // Rückkehrerkennung einschalten mit Ton
+
+				while (!digitalRead(I_O_PIN)) // warten bis I/O Taste losgelasen wird
+				{
+				} // end   if (!digitalRead(ENTER_PIN))
+
+				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung äussere Schleife herstellen
+
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				break;			  //  end case RELAIS_TEST
+
+			case DATA_RESET:
+				lcd.print("RESETnotused:I/O");
+
+				Encoder_count_store = Encoder_count_neu;
+				on_off_encoder = true; // Encoder Interrupt einschalten
+
+				if (Encoder_count_neu != Encoder_count_store)
+				{
+					if (Encoder_count_neu >= EEPROM_TEST && Encoder_count_neu < ARM_TEST)
+						Encoder_count_neu = EEPROM_TEST; // Encoderwert erhöhen, (ACHTUNG Zählerübertrag)
+					else
+						Encoder_count_neu = RELAIS_TEST; // Encoderwert verringern
+				}
 
 				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-				come_back(true); // Rückkehrerkennung einschalten mit Ton
-				break;			  //  end case RELAIS_TEST
+				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+
+				//				Serial.println("ABBRUCH 2");
+
+				break; //  end  case DATA_RESET
 
 			default:
 				lcd.print(Encoder_count_neu);
-				lcd.print("  ?xx??xx??xx");
+				lcd.print("ER: case Servi");
 				break; //  end default
+
 			} // end switch (Encoder_count_neu)
 		} // end if (Encoder_count_neu != Encoder_count_alt)
-	} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt ist, also high ist
+	} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt wurde
+
 } // end service
 
 //  ************************** Service Ende **************************************

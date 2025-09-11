@@ -192,6 +192,7 @@
 #define WAAGE_KALIBRIERUNG 	5
 #define WAAGE_TEST 			6
 #define RELAIS_TEST			7
+#define DATA_RESET		    8
 #define OUT_OF_RANGE	    255 // Wert außerhalb des Bereichs der Test Routinen
 
 /******************************************
