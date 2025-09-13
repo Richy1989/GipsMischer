@@ -162,15 +162,29 @@
 #define ARM_MITTE 1
 #define ARM_RECHTS 2
 #define ARM_NO_POS 3
-#define MAX_ARM_POS 3
+#define ARM_ANZAHL 2  //  0 bis 2, also 3 Arm-Positionen
 
 #define BECHER_LINKS 0
 #define BECHER_MITTE 1
 #define BECHER_RECHTS 2
 #define NO_BECHER 3
 
-#define MAX_DATEN_SATZ 3 // Anzahl der Datensätze, die in der EEPROM gespeichert werden können
-#define MAX_CHARAKTERS 10 // Anzahl der Zeichen in der Überschrift
+// für die Variable Datensatz
+#define MAX_DATEN_SATZ 2 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
+// pro Datensatz jeweils einer Armposition zugeordnet
+#define MAX_STRING 13 // 0 bis 12, also 13 Charakters in der Überschrift 
+#define MAX_GEWICHTE 10 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
+
+#define MAX_POSITIONEN 11 // 0 bis 11, also 12 Positionen (int), zum Anzeigen und Scrollen
+// Pos 1: in der ersten Zeile  -->  Überschrift (String) - 13 Charakters (bleibt in der 1 Zeile fixiert)
+// Pos 2: erstmalig in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g  yyy ml"
+//                                       Gipsgewicht (unsigned int), Wasser (unsigned int) (Mischungsverhältnis	)
+// Pos 3 bis 5: (3x)in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g fixiert"
+//                                                        das Grundgewicht jeweils um 160 g erhöht
+// Pos 6 bis 10: (5x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g eingabe"
+//                                                       freie Gewichtseingabe
+// Position 11 - LCD Anzeige: " Gipsentleerung "
+// Position 12 - LCD Anzeige: " Wasserentnahme "
 
 #define FAST_INCREMENT 10
 
@@ -268,17 +282,18 @@ extern const unsigned int test_routinen[];
 // berechnet die Anzahl der test_routinen
 extern const unsigned int anzahl_tests;
 
+//  Array mit Zeichen für die Texteingabe
+extern const char texteingabe[]; 
+// berechnet die Anzahl der Characters der Texteingabe
+extern const unsigned int anzahl_texteingabe;
+
 
 struct datensatz    // Structure declaration
 {						 
-	String ueberschrift; // Gibssorte 10 Charakters (0 bis 9)
-	unsigned int gesamt_gewicht;
-	unsigned int mischverhaeltnis;
-	unsigned int gewicht[MAX_DATEN_SATZ]; // Array für die Gewichte der einzelnen Komponenten
+	String ueberschrift; // 10 Charakters (0 bis 15) pro Armposition
+	unsigned int gewicht[MAX_GEWICHTE + 1]; // Array von 11 Gewichten (0 bis 10), für die Gewichte pro Armposition
 }; // Structure variable
-extern datensatz daten[MAX_ARM_POS]; // Array of structures (0 bis 2) für die Armpositionen
-
-// Array of structures (0 bis 2) für die Armpositionen
+extern datensatz daten[ARM_ANZAHL]; // Array of structures (0 bis 2) für die Armpositionen
  
 void init_data();
 

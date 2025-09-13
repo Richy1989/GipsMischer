@@ -32,7 +32,7 @@ unsigned int armposition_alt;
 bool on_off_encoder = false;
 
 // zum Abbruch einet Funktion
- bool abbruch = false;
+bool abbruch = false;
 
 // definition der Encoder Zeitabständen in Mikrosekunden
 unsigned long _lastIncReadTime = micros();
@@ -59,22 +59,28 @@ unsigned long wait_time = WAIT_TIME_1; // Wartezeit in Millisekunden
 
 // Array für die Test Routinen
 const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, TON_TEST,
-							          ARM_TEST, WAAGE_KALIBRIERUNG, WAAGE_TEST, RELAIS_TEST, DATA_RESET};
+									  ARM_TEST, WAAGE_KALIBRIERUNG, WAAGE_TEST, RELAIS_TEST, DATA_RESET};
 // berechnet die Anzahl der test_routinen
 const unsigned anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0]);
 
-datensatz daten[MAX_ARM_POS] = {}; // Array of structures (0 bis 2) für die Armpositionen
+//  Array mit Zeichen für die Texteingabe
+const char texteingabe[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+	                  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+					  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+					  '-', '+', '*', ' ',					  
+					  0}; // Ende mit Nullzeichen
+const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;  // berechnet Anzahl der Characters der Texteingabe, -1 wegen dem Nullzeichen
 
-const unsigned int anzahldaten = sizeof(daten) / sizeof(daten[0]); // Anzahl der Relais berechnet
+datensatz daten[MAX_DATEN_SATZ] = {}; // Array of structures (0 bis 2), also 3 für die Armpositionen
+const unsigned int anzahldaten = sizeof(daten);  // berechnet die Anzahl der Byts der Datensätze, zur Berechnung der EEPROM Speicheradressen
 
 void init_data()
 {
- daten[0].ueberschrift = "Gips A"; // Beispiel Initialisierung der Überschrift
- daten[0].gesamt_gewicht = 0;  	// Beispiel Initialisierung des Gesamtgewichts
- daten[0].mischverhaeltnis = 0; 	// Beispiel Initialisierung der Mischverhältnis
- daten[0].gewicht[0] = 0;  		// Beispiel Initialisierung der Gewichte
+	/*
+ daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
+ daten[0].gewicht[0] = 0;  	    	// Beispiel Initialisierung der Gewichte
  daten[0].gewicht[1] = 0;
- daten[0].gewicht[2] = 0;
- daten[0].gewicht[3] = 0;
- daten[0].gewicht[4] = 0;	
+ ..........
+ daten[0].gewicht[10] = 0;
+ */
 }

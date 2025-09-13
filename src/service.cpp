@@ -89,13 +89,6 @@ void service()
 							lcd.print("   ");						   // Lösche die Zeile
 							lcd.setCursor(13, 1);					   // Setz Curser auf Charakter 13, Zeile 2
 							lcd.print(EEPROM.read(Encoder_count_neu)); // Daten der Adresse (FF = leer) anzeigen
-
-							/*
-								Beispiel der Datenspeicherung:
-							   // EEPROM.put(0, daten);
-							   // EEPROM.get(0, daten); // Lies die Datenstruktur aus der EEPROM-Adresse 1)
-							*/
-
 						} // end if (Encoder_count_neu != Encoder_count_alt)
 					} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt ist, also high ist
 
@@ -650,10 +643,54 @@ void service()
 				break;			  //  end case RELAIS_TEST
 
 			case DATA_RESET:
-				lcd.print("RESETnotused:I/O");
+				lcd.print("DATA Reset   :ENT");
 
-				Encoder_count_store = Encoder_count_neu;
-				on_off_encoder = true; // Encoder Interrupt einschalten
+				if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
+				{
+
+					while (!digitalRead(ENTER_PIN)) // warten bis Enter taste losgelasen wird
+					{
+						// Wird nicht auf I/O Taste (Bedienrabbruch) getestet
+					};
+					delay(5); // Entprellzeit
+
+					Encoder_count_alt = Encoder_count_neu;
+
+					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print("Sicher?     :ENT");
+
+					do
+					{
+						if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
+						{
+							//  Keine I/O Prüfung
+							on_off_encoder = false; // Encoder Interrupt ausschalten
+
+							lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+							lcd.print("     warten     ");
+
+							//  erstmalige Dateneingabe initialisieren
+							for (int i = 0; i <= ARM_ANZAHL; i++) // 0 bis 2 Arme (3 Arme)
+							{
+								daten[i].ueberschrift = " Text eingeben  "; // Initialisierung der Überschrift
+
+								for (int j = 0; j <= MAX_GEWICHTE; j++) // 0 bis 10 Gewichte pro Arm (11 Gewichte)
+									daten[i].gewicht[j] = 0;			// Initialisierung der Gewichte
+							} // end for (int i = 0; i <= ARM_ANZAHL; i++)
+
+							/*
+								// Datenspeicherung im EEPROM:
+								// EEPROM.put(0, daten); // Schreiben der Daten (Datenstruktur) auf den EEPROM, ab Adresse 0
+								// EEPROM.get(0, daten); // Lesen der Daten (Datenstruktur) aus dem EEPROM, ab Adresse 0)
+							*/
+
+							on_off_encoder = true; // Encoder Interrupt einschalten
+
+							break; // bricht die do while (digitalRead(I_O_PIN)) ab
+						} // end  if (!digitalRead(ENTER_PIN))
+					} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+
+				} // end  if (!digitalRead(ENTER_PIN))
 
 				if (Encoder_count_neu != Encoder_count_store)
 				{
@@ -665,7 +702,7 @@ void service()
 
 				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-				come_back(false); // Rückkehrerkennung einschalten ohne Ton
+				come_back(true); // Rückkehrerkennung einschalten mit Ton
 
 				//				Serial.println("ABBRUCH 2");
 
