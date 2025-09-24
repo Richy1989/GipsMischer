@@ -162,40 +162,49 @@
 #define ARM_MITTE 1
 #define ARM_RECHTS 2
 #define ARM_NO_POS 3
-#define ARM_ANZAHL 2  //  0 bis 2, also 3 Arm-Positionen
+
+#define ARM_ANZAHL 3  //  0 bis 2, also 3 Arm-Positionen
 
 #define BECHER_LINKS 0
 #define BECHER_MITTE 1
 #define BECHER_RECHTS 2
 #define NO_BECHER 3
 
-// für die Variable Datensatz
-#define MAX_DATEN_SATZ 2 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
+// für die Variable daten vom Typ Datensatz
+#define MAX_DATEN_SATZ 3 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
 // pro Datensatz jeweils einer Armposition zugeordnet
 #define MAX_STRING 13 // 0 bis 12, also 13 Charakters in der Überschrift 
-#define MAX_GEWICHTE 10 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
+#define MAX_GEWICHTE 11 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
 
-#define MAX_POSITIONEN 11 // 0 bis 11, also 12 Positionen (int), zum Anzeigen und Scrollen
+#define MAX_POSITIONEN 11 // 0 bis 11, also 12 Positionen (int), zum Positionen Anzeigen und Scrollen
 // Pos 1: in der ersten Zeile  -->  Überschrift (String) - 13 Charakters (bleibt in der 1 Zeile fixiert)
-// Pos 2: erstmalig in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g  yyy ml"
-//                                       Gipsgewicht (unsigned int), Wasser (unsigned int) (Mischungsverhältnis	)
-// Pos 3 bis 5: (3x)in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g fixiert"
-//                                                        das Grundgewicht jeweils um 160 g erhöht
+// Pos 2: einmalig in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g  yyy ml"
+//                                       Gipsgewicht (unsigned int), Wassergewicht (unsigned int) - Mischungsverhältnis
+// Pos 3 bis 5: (3x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g fixiert"
+//                                                        das Gesamtgewicht jeweils um 160 g des Gundgewichtes erhöht
 // Pos 6 bis 10: (5x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g eingabe"
-//                                                       freie Gewichtseingabe
+//                                                        freie Gesamtgewicht Eingabe
 // Position 11 - LCD Anzeige: " Gipsentleerung "
 // Position 12 - LCD Anzeige: " Wasserentnahme "
+// Die Anzeige der Positionen am LCD erfolgt numerisch zweistellig über die ersten beiden links stehenden Charakters
+// gefolgt von einem Leerzeichen, Beispiel: 01 , 02 , ..., "10 ", "11 ", "12 "
 
 #define FAST_INCREMENT 10
 
 // Arduino Mega hat 4 KB (4096 bytes) EEPROM Zellen, also 0 bis 4095
 #define MAX_EEPROM_ADRESSE 4095 
 
+// Sicherheitsabstand der einzellnen Adressen beim Schreiben auf den EEPROM 
+#define EEPROM_ADRESSABSTAND 100 //  Abstand in Byts der Adressen der zu speichernden Variablen im EEPROM
+
 // Maximal messbares Gewicht in Gramm
 #define MAX_GEWICHT 3000
 
-// Wartezeit zur Tastenverzögerung in ms
-#define WAIT_TIME_1 750
+// Wartezeit in ms
+#define WAIT_TIME_1 750   // LED hell und dunkelzeit beim service blinken 
+#define WAIT_TIME_2 3000  // ersten 3 Sekunden anzeige
+#define WAIT_TIME_3 5000  // zweiten 2 Sekunden anzeige
+#define WAIT_TIME_4 8000  // dritten 3 Sekunden anzeige
 
 // Benennung der Service Test Routinen
 #define EEPROM_TEST 		0
@@ -246,7 +255,6 @@ extern bool abbruch;
 // Zahlenwert im Encoder
 extern  int Encoder_count_neu;
 extern  int Encoder_count_alt;
-extern  int Encoder_count_store;
 
 // definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
 extern  int max_counter;
@@ -282,19 +290,26 @@ extern const unsigned int test_routinen[];
 // berechnet die Anzahl der test_routinen
 extern const unsigned int anzahl_tests;
 
-//  Array mit Zeichen für die Texteingabe
+//  Array mit Zeichen für die Texteingabe (Großbuchstaben, Zahlen, Sonderzeichen)
 extern const char texteingabe[]; 
 // berechnet die Anzahl der Characters der Texteingabe
 extern const unsigned int anzahl_texteingabe;
 
-
-struct datensatz    // Structure declaration
+// Structure Definition
+struct datensatz    
 {						 
-	String ueberschrift; // 10 Charakters (0 bis 15) pro Armposition
-	unsigned int gewicht[MAX_GEWICHTE + 1]; // Array von 11 Gewichten (0 bis 10), für die Gewichte pro Armposition
+	String ueberschrift; // 13 Charakters (0 bis 12) pro Armposition
+	unsigned int gewicht[MAX_GEWICHTE]; // Array von 11 Gewichten (0 bis 10), für die Gewichte pro Armposition
 }; // Structure variable
-extern datensatz daten[ARM_ANZAHL]; // Array of structures (0 bis 2) für die Armpositionen
- 
+
+// Array of structures (0 bis 2) also 3 für die Armpositionen
+extern datensatz daten[MAX_DATEN_SATZ]; 
+// berechnet die Anzahl der Byts der Variablen daten
+extern const unsigned int anzahl_daten;
+
+extern byte smiley[8];  //erstellt Zeichen Smiley
+
+
 void init_data();
 
 /******************************************

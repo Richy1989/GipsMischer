@@ -1,3 +1,4 @@
 #include "setup.h"
-// void EEPROM_test();
+
+void read_armposition();
 void service();

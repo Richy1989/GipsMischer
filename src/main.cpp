@@ -143,224 +143,194 @@ void setup()
 	scale.begin(DATA_PIN, CLOCK_PIN); // dataPin =20, clockPin = 21, gain = 128 / Interruptfähige Pins
 
 	// Cal init in setup
-	init_data();
+	// init_data();
 	// daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
+
+	lcd.createChar(0, smiley); // erstelltes Zeichen benutzen
 
 } // end setup **********************************************************************
 
 void loop()
 {
-	lcd.setCursor(0, 1);			   // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("   		           "); // Zeile löschen
-	lcd.setCursor(0, 1);			   // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("   		           "); // Zeile löschen
-
-	////////////////////////////////// Service Routine Anfang ///////////////////////////////////////////
-	service(); // Aufruf der Service Routine
-			   ////////////////////////////////// TService Routine Ende ///////////////////////////////////////////
-
-	while (true)
-	{
-		lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
-		lcd.print("  ungeplanter   "); // Zeile löschen
-		lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
-		lcd.print("  Ruecksprung   "); // Zeile löschen
-	} // end while true
-
-	//  ************************** Waage Kalibrierung Anfang **************************************
-
-	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("LeerGew. P:Waage");
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print(" wird ermittelt ");
-	while (digitalRead(WAAGE_PIN))
-	{
-	} // warten bis Waage Taste gedrückt wird
-
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("  bitte warten  ");
-
-	while (scale.is_ready())
-	{
-	} // warten bis die Waage bereit ist
-	Leergew_einheiten = scale.read_average(20); // Leergewicht einlesen, Durchschnitt von 20 Messungen
-	lcd.setCursor(0, 0);						// Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("LeerGewich P:I/O");
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("  gespeichert   ");
-	while (digitalRead(I_O_PIN))
-	{
-	} // warten bis I/O Taste gedrückt wird
-
-	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("LeerGew. P:Enter");
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("LeerGew:");
-	lcd.setCursor(8, 1); // Setz Curser auf Charakter 9, Zeile 2
-	lcd.print(Leergew_einheiten);
-	while (digitalRead(ENTER_PIN))
-	{
-	} // warten bis Enter Taste gedrückt wird
-
-	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("Gewicht auflegen");
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("ready WaageTaste");
-	while (digitalRead(WAAGE_PIN))
-	{
-	} // warten bis Waage Taste gedrückt wird
-
-	lcd.setCursor(0, 0); // Set cursor to column 1, row 1
-	lcd.print("Gewicht  P:Enter");
-	lcd.setCursor(0, 1); // Set cursor to column 1, row 2
-	lcd.print("Tara Soll:     g");
-
-	min_counter = 0;
-	max_counter = MAX_GEWICHT;		 // Maximales messbares Gewicht in Gramm
-	Encoder_count_neu = min_counter; // Gewicht des Sollgewichtes in Gramm
-	Encoder_count_alt = min_counter - 1;
+	//  int curser_position = 0; // Position des Cursors auf dem LCD
 
 	on_off_encoder = true; // Encoder Interrupt einschalten
+	lcd.clear();		   // LCD löschen
+
+	////////////////////////////////// Begrüßugng auf dem LCD Anfang ///////////////////////////////////////////
+
+	start_time = millis(); // Startzeit für Begrüßung setzen
 
 	do
 	{
-		if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value
+
+		//  Wenn Taste ENTER und I/O Taste gleichzeitig gedrückt ist, also low
+		//  wird die Service Routine aufgerufen
+		//  (Enter Taste ist die linke Taste auf der Bedieneinheit)
+		//  (I/O Taste ist die rechte Taste auf der Bedieneinheit)
+		if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
 		{
-			Encoder_count_alt = Encoder_count_neu;
+			service();	   // Aufruf der Service Routine
+			lcd.noBlink(); // Cursor ausschalten
+			break;		   // Verlassen der Schleife do while (millis() - start_time < WAIT_TIME_4))
+		} // end if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
 
-			lcd.setCursor(11, 1);		  // Set cursor to column 11, row 2
-			lcd.print("    ");			  // Clear previous value
-			lcd.setCursor(11, 1);		  // Set cursor to column 11, row 2
-			lcd.print(Encoder_count_neu); // im Encoder_count_neu steht der Gewichtswert in Gramm
-		} // end if (Encoder_count_neu != Encoder_count_alt)
-	} while (digitalRead(ENTER_PIN)); // warten bis Enter Taste gedrückt wird
+		// Laufschrift zur Begrüßung:
+		// *   Zahntechnik   * *     powered    *  *    Richard     *
+		// *    Obwegeser   *  *       by       *  *    LEOPOLD     *
 
-	on_off_encoder = false; // Encoder Interrupt ausschalten
-
-	//  ************************** Waage Kalibrierung Ende **************************************
-
-	//  ************************** Wiegefunktion Anfang **************************************
-
-	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("Messung  P:Waage");
-
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("Initialisierung ");
-
-	while (scale.is_ready())
-	{
-	} // warten bis die Waage bereit ist
-
-	Eichgew_einheiten = scale.read_average(3); // Waagenwert einlesen, Durchschnitt von 3 Messungen
-
-	// Differenz der Gewichtseinheit minus der Leereinheitdurch,
-	// Dividiert durch das eingegeben Gewicht in Gramm (Encoder_count_neu)
-	Korrekturfaktor = (Eichgew_einheiten - Leergew_einheiten) / Encoder_count_neu;
-
-	Gewicht = 0;	  // Gewicht auf 0 setzen
-	Gewicht_alt = -1; // Gewicht_alt auf -1 setzen
-
-	lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-	lcd.print("Gewicht:        g");
-
-	do
-	{
-		while (scale.is_ready())
+		if (millis() - start_time < WAIT_TIME_2) // Anzeige der ersten 2 Sekunden
 		{
-		} // warten bis die Waage bereit ist
-
-		Gewicht = (scale.read() - Leergew_einheiten) / Korrekturfaktor;
-
-		if (Gewicht != Gewicht_alt) // Anzeigen des Gewichtes nur wenn es sich geändert hat
-		{
-			Gewicht_alt = Gewicht;			  // Gewicht_alt aktualisieren
-			lcd.setCursor(9, 1);			  // Setze Cursor auf die 9. Stelle der 2. Zeile
-			lcd.print("    ");				  // Clear previous value
-			lcd.setCursor(9, 1);			  // Setze Cursor auf die 9. Stelle der 2. Zeile
-			lcd.print((unsigned int)Gewicht); // Gewicht anzeigen, casten auf unsigned int
-		} // end if (Gewicht != Gewicht_alt)
-
-	} while (digitalRead(WAAGE_PIN));
-
-	//  ************************** Wiegefunktion Ende **************************************
-
-	//  ************************** Relais Test Anfang **************************************
-
-	min_counter = 0;
-	max_counter = anzahlrelais - 1;		 // zur Adressierug des relais Arryas
-	Encoder_count_neu = min_counter;	 // Startwert für Encoder; unterschiedlich, damit beim ersten Durchgang sofort ausgeführt wird
-	Encoder_count_alt = min_counter - 1; // Erststartbedingung für Encoder herstellen
-
-	lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-	lcd.print("Test:ENT end:I/O");
-
-	on_off_encoder = true; // Encoder Interrupt einschalten
-
-	do
-	{
-		if (Encoder_count_neu != Encoder_count_alt) // If count has changed print the new value to serial
-		{
-			Encoder_count_alt = Encoder_count_neu;
-
+			lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+			lcd.print("   Zahntechnik   ");
 			lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-
-			switch (relais[Encoder_count_neu])
-			{
-			case RELAIS_ML:
-				lcd.print("Gips Motor Links");
-				break;
-			case RELAIS_MM:
-				lcd.print("Gips Motor Mitte");
-				break;
-			case RELAIS_MR:
-				lcd.print("Gips Motor Recht");
-				break;
-			case RELAIS_RL:
-				lcd.print(" Ruettler Links ");
-				break;
-			case RELAIS_RM:
-				lcd.print(" Ruettler Mitte ");
-				break;
-			case RELAIS_RR:
-				lcd.print(" Ruettler Rechts");
-				break;
-			case RELAIS_VL:
-				lcd.print("H2O Ventil Links");
-				break;
-			case RELAIS_VM:
-				lcd.print("H2O Ventil Mitte");
-				break;
-			case RELAIS_VR:
-				lcd.print("H2O Ventil Recht");
-				break;
-			case RELAIS_WP:
-				lcd.print("   H2O Pumpe    ");
-				break;
-			default:
-				lcd.print("xx??xx");
-				break;
-			} // end switch (Encoder_count_neu)
-		} // end if (Encoder_count_neu != Encoder_count_alt)
-
-		if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
+			lcd.print("    Obwegeser   ");
+		} // end if (delta_time < WAIT_TIME_2)
+		else
 		{
-			on_off_encoder = false; // Encoder Interrupt ausschalten
-			lcd.setCursor(0, 1);	// Setz Curser auf Charakter 1, Zeile 2
-			lcd.print(relais[Encoder_count_neu]);
-
-			digitalWrite(relais[Encoder_count_neu], EIN); // Relais einschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
-
-			while (!digitalRead(ENTER_PIN))
+			if (millis() - start_time < WAIT_TIME_3) // Anzeige der zweiten 2 Sekunden
 			{
-			} // Relais halten bis Enter Taste losgelassen
+				lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 2
+				lcd.print("    powered     ");
+				lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+				lcd.print("       by       ");
+			} // end else if (delta_time < WAIT_TIME_3)
+			else if (millis() - start_time < WAIT_TIME_4) // Anzeige der dritten 2 Sekunden
+			{
+				//			Serial.println("dritten 2 Sekunden");
+				lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+				lcd.print("    Richard     ");
+				lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+				lcd.print("    LEOPOLD     ");
+			} // end else if (delta_time < WAIT_TIME_4)
+		} // end end if (delta_time < WAIT_TIME_2)
 
-			digitalWrite(relais[Encoder_count_neu], AUS); // Relais ausschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
+	} while (millis() - start_time < WAIT_TIME_4);
 
-			on_off_encoder = true; // Encoder Interrupt einschalten
-		} // if(!digitalRead(ENTER_PIN))
+	////////////////////////////////// Begrüßugng auf dem LCD Ende ///////////////////////////////////////////
 
-	} while (digitalRead(I_O_PIN)); // solange I/O Ttaste nicht gedrückt ist, also high ist
+	lcd.noBlink();	// Cursor ausschalten
+	lcd.noCursor(); // Cursor ausschalten
 
-	//  ************************** Relais Test Ende **************************************
+	////////////////////////////////// Normales Arbeits Programm ///////////////////////////////////////////
+	// Normales Arbeits Programm hier einfügen
+
+	// come_back(false); // Rückkehrerkennung einschalten ohne Ton
+
+	min_counter = 0;				// Minimalwert für Encoder
+	max_counter = MAX_GEWICHTE - 1; // Maximalwert für Encoder
+
+	Encoder_count_neu = min_counter;
+	Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+	on_off_encoder = true; // Encoder Interrupt einschalten
+
+	read_armposition();
+	do
+	{
+		// Armpositionen einlesen und in Variable armposition speichern
+		//  ARM_LINKS, ARM_MITE, ARM_RECHTS, ARM_NO_POS
+		read_armposition();
+		armposition_alt = armposition;
+
+		lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
+		lcd.print(daten[armposition].ueberschrift);
+
+		if (Encoder_count_neu != Encoder_count_alt || armposition_alt != armposition)
+		{
+			if (armposition_alt != armposition)
+			{
+				if (armposition == ARM_NO_POS)
+				{
+					// Fehleranzeige wenn keine Armposition erkannt wird
+					lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 1
+					lcd.print(" KEINE POSITION "); // Zeile löschen
+				}
+				else
+				{
+					armposition_alt = armposition; // Armposition merken
+				}
+			} // end if (armposition_alt != armposition)
+			else
+			{						 //  somit ist getrigger durch: Encoder_count_neu != Encoder_count_alt
+				lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
+				lcd.print(daten[armposition].ueberschrift);
+
+				Encoder_count_alt = Encoder_count_neu;
+
+				switch (Encoder_count_neu)
+				{
+				case 0:					 /*  Überschrift  -  Editieren durch ENTER */
+					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+					lcd.print("01");
+					lcd.print(byte(0)); //  Zeichen "smiley" anzeigen
+
+					lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
+					lcd.print(daten[armposition].ueberschrift);
+
+					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print("02 xxx g  yyy ml");
+
+					lcd.setCursor(3, 1);								 // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print(lcd.print(daten[armposition].gewicht[0])); //  Referenzmenge Gipsgewicht in g
+
+					lcd.setCursor(10, 1);								 // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print(lcd.print(daten[armposition].gewicht[1])); // Referenzmenge Waser in g
+
+					if (!digitalRead(ENTER_PIN))
+					{
+
+						// Editieren beginnen
+
+					} // end if (!digitalRead(ENTER_PIN))
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+					break;
+
+				case 1: /*  Referenz Gipsgewicht / Wassergewicht */
+
+					break;
+
+				case 2: /*  Gipsgewicht fix immer um 160 g erhöht */
+				case 3:
+				case 4:
+
+					break;
+
+				case 5: /*  Gipsgewicht in g eingeben default ist 0  */
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+
+					break;
+
+				case 10: /*  Gipsentleerung  */
+
+					break;
+
+				case 11: /*  Wasserentnahme  */
+
+					break;
+
+				default:
+
+					break;
+				} // end switch (curser_position)
+			} // end else  if (armposition_alt != armposition)
+			//	} // end if (armposition_alt != armposition)
+		} // end if (Encoder_count_neu != Encoder_count_alt || armposition_alt != armposition)
+
+		//  Sollte die loop() Funktion verlassen werden, was nicht sein darf, wird hier eine Endlosschleife gestartet
+		//  mit der Meldung "ungeplanter Ruecksprung"
+
+		while (true)
+		{
+			lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
+			lcd.print("  ungeplanter   "); // Zeile löschen
+			lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
+			lcd.print("  Ruecksprung   "); // Zeile löschen
+		} // end while true
+
+	} while (true);
 
 } // end void loop() **********************************************************************

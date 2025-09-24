@@ -18,7 +18,6 @@ float Korrekturfaktor;
 // Zahlenwert im Encoder
 int Encoder_count_neu = 0;
 int Encoder_count_alt = -1;
-int Encoder_count_store = 0; // Sicherung des Encoderwertes
 
 // definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
 int max_counter = 500;
@@ -39,6 +38,11 @@ unsigned long _lastIncReadTime = micros();
 unsigned long _lastDecReadTime = micros();
 unsigned long _pauseLength = 25000;
 
+//  Array für die Adressierung der RelaisPins auf dem Arduino Mega2560
+//  Motor Links (A8), Motor Mitte (A7), Motor Rechts (A6)
+//  Rüttler Links (A4), Rüttler Mitte (A14), Rüttler Rechts (A2)
+//  Ventil Links (A15), Ventil Mitte A10), Ventil Rechts (A13)
+//  Wasserpumpe (A12)
 const unsigned int relais[] = {
 	RELAIS_ML, RELAIS_MM, RELAIS_MR, // Motoren Relais Pins
 	RELAIS_RL, RELAIS_RM, RELAIS_RR, // Rüttler Relais Pins
@@ -46,9 +50,8 @@ const unsigned int relais[] = {
 	RELAIS_WP						 // Wasserpumpe Relais Pin
 };
 
-//  Array für die Relais Pins, die in der Reihenfolge der Relais angeordnet sind
-//  Relais 1 bis 9 sind Motoren, Rüttler und Ventile, Relais 10 ist die Wasserpumpe
-//  Relais 11 bis 16 sind defekt, da sie nicht mehr auf der Relaiskarte vorhanden sind
+//  Berechnet die Anzahl der Relais;
+//  Relais = Anzahl Byts der Variablen relais geteilt durch die Bytegröße eines Arrayelements 
 const unsigned int anzahlrelais = sizeof(relais) / sizeof(relais[0]); // Anzahl der Relais berechnet
 
 const unsigned int positiveTones[] = {1000, 1200, 1400, 1600}; // Positive Töne
@@ -58,10 +61,12 @@ unsigned long start_time;
 unsigned long wait_time = WAIT_TIME_1; // Wartezeit in Millisekunden
 
 // Array für die Test Routinen
-const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, TON_TEST,
-									  ARM_TEST, WAAGE_KALIBRIERUNG, WAAGE_TEST, RELAIS_TEST, DATA_RESET};
-// berechnet die Anzahl der test_routinen
-const unsigned anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0]);
+const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, 
+	                                  TON_TEST, ARM_TEST, WAAGE_KALIBRIERUNG, 
+									  WAAGE_TEST, RELAIS_TEST, DATA_RESET};
+// berechnet die Anzahl der test_routinen in der Variablen test_routinen
+// test_routinen = Anzahl Byts der Variablen test_routinen geteilt durch die Bytegröße eines Arrayelements
+const unsigned int anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0]);
 
 //  Array mit Zeichen für die Texteingabe
 const char texteingabe[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
@@ -69,18 +74,52 @@ const char texteingabe[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K
 					  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 					  '-', '+', '*', ' ',					  
 					  0}; // Ende mit Nullzeichen
-const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;  // berechnet Anzahl der Characters der Texteingabe, -1 wegen dem Nullzeichen
+// berechnet Anzahl der Characters der Texteingabe, -1 wegen dem Nullzeichen
+const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;  
 
-datensatz daten[MAX_DATEN_SATZ] = {}; // Array of structures (0 bis 2), also 3 für die Armpositionen
-const unsigned int anzahldaten = sizeof(daten);  // berechnet die Anzahl der Byts der Datensätze, zur Berechnung der EEPROM Speicheradressen
+// POS 01: Überschrift Eingabe
+
+// POS 02: Gewicht[0]:Referenzgewicht Gips   (eingeben)
+// POS 02: Gewicht[1]:Referenzgewicht Wasser (eingeben)
+
+// POS 03: Gewicht[2]:Gipsgewicht fixiert (160g)
+// POS 04: Gewicht[3]:Gipsgewicht fixiert (160g + 160g = 320g)
+// POS 05: Gewicht[4]:Gipsgewicht fixiert (160g + 160g + 160g = 480g)
+
+// POS 06: Gewicht[5]:Gipsgewicht variabel  (eingeben)
+// POS 07: Gewicht[6]:Gipsgewicht variabel  (eingeben)
+// POS 08: Gewicht[7]:Gipsgewicht variabel  (eingeben)
+// POS 09: Gewicht[8]:Gipsgewicht variabel  (eingeben)
+// POS 10: Gewicht[9]:Gipsgewicht variabel  (eingeben)
+
+// POS 11: Gipsentleerung (keine Gewicht, keine Eingabe)
+// POS 12: Wasserentnahme (keine Gewicht, keine Eingabe)
+
+// Array of structures (0 bis 2), also 3 für die Armpositionen
+datensatz daten[MAX_DATEN_SATZ] = {}; 
+// berechnet die Anzahl der Byts der Variablen daten, zur Berechnung der EEPROM Speicheradressen
+const unsigned int anzahl_daten = sizeof(daten);  
 
 void init_data()
 {
-	/*
- daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
+/* daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
  daten[0].gewicht[0] = 0;  	    	// Beispiel Initialisierung der Gewichte
  daten[0].gewicht[1] = 0;
  ..........
  daten[0].gewicht[10] = 0;
  */
 }
+
+byte smiley[8] = { //erstellt Zeichen Smiley
+B00000,
+B10001,
+B00000,
+B00000,
+B10001,
+B01110,
+B00000,
+};
+
+
+
+
