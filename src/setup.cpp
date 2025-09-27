@@ -58,7 +58,6 @@ const unsigned int positiveTones[] = {1000, 1200, 1400, 1600}; // Positive Töne
 const unsigned int negativeTones[] = {500, 300, 200};		   // Negative Töne
 
 unsigned long start_time;
-unsigned long wait_time = WAIT_TIME_1; // Wartezeit in Millisekunden
 
 // Array für die Test Routinen
 const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, 
@@ -98,7 +97,7 @@ const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;
 // Array of structures (0 bis 2), also 3 für die Armpositionen
 datensatz daten[MAX_DATEN_SATZ] = {}; 
 // berechnet die Anzahl der Byts der Variablen daten, zur Berechnung der EEPROM Speicheradressen
-const unsigned int anzahl_daten = sizeof(daten);  
+const unsigned int anzahl_daten = sizeof(daten);  //  Bytegröße der Variablen daten 13+22 = 35*3 = 105 Byts)
 
 void init_data()
 {

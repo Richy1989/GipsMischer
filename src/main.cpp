@@ -146,7 +146,37 @@ void setup()
 	// init_data();
 	// daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
 
-	lcd.createChar(0, smiley); // erstelltes Zeichen benutzen
+	lcd.createChar(SMILEY, smiley); // erstelltes Zeichen benutzen
+
+	/*
+	// EEPROM.put(0, daten); // Schreiben der Daten (Datenstruktur) auf den EEPROM, ab Adresse 0
+	// EEPROM.get(0, daten); // Lesen der Daten (Datenstruktur) aus dem EEPROM, ab Adresse 0)
+	*/
+	EEPROM.get(0, daten); // Lesen ab der Adresse 0 aus dem EEPROM
+						  // und speichern der Daten in der Variablen Daten (Datenstruktur)
+
+	// Liest die EEPROM Adresse und speichert die Daten in der Variable Korrekturfaktor
+	// Adresse: anzahl_daten + EEPROM_ADRESSABSTAND
+	EEPROM.get(anzahl_daten + EEPROM_ADRESSABSTAND, Korrekturfaktor);
+
+	// Liest die EEPROM Adresse und speichert die Daten in der Variable Leergew_einheiten
+	// Adresse: anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND
+	EEPROM.get(anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND, Leergew_einheiten);
+
+	Serial.print("Anzahl Daten: ");
+	Serial.println(anzahl_daten);
+
+	Serial.print("ueberschrift: ");
+	Serial.println(daten[0].ueberschrift);
+
+	Serial.print("Gewicht[0]: ");
+	Serial.println(daten[0].gewicht[0]);
+
+	Serial.print("Korrekturfaktor: ");
+	Serial.println(Korrekturfaktor);
+
+	Serial.print("Leergew_einheiten: ");
+	Serial.println(Leergew_einheiten);
 
 } // end setup **********************************************************************
 
@@ -170,9 +200,18 @@ void loop()
 		//  (I/O Taste ist die rechte Taste auf der Bedieneinheit)
 		if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
 		{
-			service();	   // Aufruf der Service Routine
+			service(); // Aufruf der Service Routine
+
 			lcd.noBlink(); // Cursor ausschalten
-			break;		   // Verlassen der Schleife do while (millis() - start_time < WAIT_TIME_4))
+
+			while (!digitalRead(I_O_PIN)) // warten bis I/O Taste losgelasen wenn vom Servoce zurück
+			{
+			} // end while (!digitalRead(I_O_PIN))
+
+			lcd.clear(); // LCD löschen
+
+			start_time = millis(); // Startzeit für Begrüßung setzen
+
 		} // end if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
 
 		// Laufschrift zur Begrüßung:
@@ -204,7 +243,6 @@ void loop()
 				lcd.print("    LEOPOLD     ");
 			} // end else if (delta_time < WAIT_TIME_4)
 		} // end end if (delta_time < WAIT_TIME_2)
-
 	} while (millis() - start_time < WAIT_TIME_4);
 
 	////////////////////////////////// Begrüßugng auf dem LCD Ende ///////////////////////////////////////////
@@ -217,44 +255,51 @@ void loop()
 
 	// come_back(false); // Rückkehrerkennung einschalten ohne Ton
 
-	min_counter = 0;				// Minimalwert für Encoder
-	max_counter = MAX_GEWICHTE - 1; // Maximalwert für Encoder
+	min_counter = 0;					 // Minimalwert für Encoder
+	max_counter = MAX_GEWICHTANZAHL - 1; // Maximalwert für Encoder
 
-	Encoder_count_neu = min_counter;
+	Encoder_count_neu = min_counter;  // Start mit Zeile 0 (Überschrift)
 	Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-	on_off_encoder = true; // Encoder Interrupt einschalten
+	on_off_encoder = true;			// Encoder Interrupt einschalten
+	armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-	read_armposition();
+	//////////////////////////// Beginn Arbeitsprogramm //////////////////////////////
+
 	do
 	{
 		// Armpositionen einlesen und in Variable armposition speichern
 		//  ARM_LINKS, ARM_MITE, ARM_RECHTS, ARM_NO_POS
-		read_armposition();
-		armposition_alt = armposition;
 
-		lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
-		lcd.print(daten[armposition].ueberschrift);
+		armposition = ARM_LINKS;
+		armposition_alt = ARM_LINKS;
+
+		//	read_armposition();
+
+		if (armposition_alt != armposition && armposition == ARM_NO_POS)
+		{
+			// Fehleranzeige, keine Armposition erkannt wird
+			lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 1
+			lcd.print("NO ARM POSITION!");
+
+			// FEHLERERKENNUNG aktivieren!!!!
+
+			Musik(MELODIE_FEHLER);
+			delay(3000);
+		} // end if (armposition_alt != armposition)
+		else
+			armposition_alt = armposition;
+
+		/*
+		setzen der LED Anzeige
+		*/
 
 		if (Encoder_count_neu != Encoder_count_alt || armposition_alt != armposition)
 		{
-			if (armposition_alt != armposition)
-			{
-				if (armposition == ARM_NO_POS)
-				{
-					// Fehleranzeige wenn keine Armposition erkannt wird
-					lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 1
-					lcd.print(" KEINE POSITION "); // Zeile löschen
-				}
-				else
-				{
-					armposition_alt = armposition; // Armposition merken
-				}
-			} // end if (armposition_alt != armposition)
-			else
-			{						 //  somit ist getrigger durch: Encoder_count_neu != Encoder_count_alt
-				lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
-				lcd.print(daten[armposition].ueberschrift);
+
+			{	//  somit ist getrigger durch: Encoder_count_neu != Encoder_count_alt
+				//			lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
+				//			lcd.print(daten[armposition].ueberschrift);
 
 				Encoder_count_alt = Encoder_count_neu;
 
@@ -263,7 +308,15 @@ void loop()
 				case 0:					 /*  Überschrift  -  Editieren durch ENTER */
 					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
 					lcd.print("01");
-					lcd.print(byte(0)); //  Zeichen "smiley" anzeigen
+					//		lcd.print(byte(SMILEY)); //  Zeichen "smiley" anzeigen
+					lcd.write(byte(SMILEY)); //  Zeichen "smiley" anzeigen
+					lcd.print(daten[armposition].ueberschrift);
+
+					lcd.setCursor(3, 1);								 // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print(lcd.print(daten[armposition].gewicht[0])); //  Referenzmenge Gipsgewicht in g
+
+					lcd.setCursor(10, 1);								 // Setz Curser auf Charakter 1, Zeile 2
+					lcd.print(lcd.print(daten[armposition].gewicht[1])); // Referenzmenge Waser in g
 
 					lcd.setCursor(3, 0); // Setz Curser auf Charakter 4, Zeile 1
 					lcd.print(daten[armposition].ueberschrift);
@@ -286,14 +339,14 @@ void loop()
 					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 					break;
 
-				case 1: /*  Referenz Gipsgewicht / Wassergewicht */
-
+				case 1:								  /*  Referenz Gipsgewicht / Wassergewicht */
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 					break;
 
 				case 2: /*  Gipsgewicht fix immer um 160 g erhöht */
 				case 3:
 				case 4:
-
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 					break;
 
 				case 5: /*  Gipsgewicht in g eingeben default ist 0  */
@@ -301,15 +354,15 @@ void loop()
 				case 7:
 				case 8:
 				case 9:
-
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 					break;
 
-				case 10: /*  Gipsentleerung  */
-
+				case 10:							  /*  Gipsentleerung  */
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 					break;
 
-				case 11: /*  Wasserentnahme  */
-
+				case 11:							  /*  Wasserentnahme  */
+					Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 					break;
 
 				default:
@@ -322,14 +375,6 @@ void loop()
 
 		//  Sollte die loop() Funktion verlassen werden, was nicht sein darf, wird hier eine Endlosschleife gestartet
 		//  mit der Meldung "ungeplanter Ruecksprung"
-
-		while (true)
-		{
-			lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
-			lcd.print("  ungeplanter   "); // Zeile löschen
-			lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
-			lcd.print("  Ruecksprung   "); // Zeile löschen
-		} // end while true
 
 	} while (true);
 

@@ -174,7 +174,7 @@
 #define MAX_DATEN_SATZ 3 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
 // pro Datensatz jeweils einer Armposition zugeordnet
 #define MAX_STRING 13 // 0 bis 12, also 13 Charakters in der Überschrift 
-#define MAX_GEWICHTE 11 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
+#define MAX_GEWICHTANZAHL 11 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
 
 #define MAX_POSITIONEN 11 // 0 bis 11, also 12 Positionen (int), zum Positionen Anzeigen und Scrollen
 // Pos 1: in der ersten Zeile  -->  Überschrift (String) - 13 Charakters (bleibt in der 1 Zeile fixiert)
@@ -201,10 +201,10 @@
 #define MAX_GEWICHT 3000
 
 // Wartezeit in ms
-#define WAIT_TIME_1 750   // LED hell und dunkelzeit beim service blinken 
-#define WAIT_TIME_2 3000  // ersten 3 Sekunden anzeige
-#define WAIT_TIME_3 5000  // zweiten 2 Sekunden anzeige
-#define WAIT_TIME_4 8000  // dritten 3 Sekunden anzeige
+#define WAIT_TIME_LED  750  // LED Hell- und Dunkelzeit beim service blinken 
+#define WAIT_TIME_2   3000  // ersten 3 Sekunden anzeige
+#define WAIT_TIME_3   5000  // zweiten 2 Sekunden anzeige
+#define WAIT_TIME_4   8000  // dritten 3 Sekunden anzeige
 
 // Benennung der Service Test Routinen
 #define EEPROM_TEST 		0
@@ -217,6 +217,18 @@
 #define RELAIS_TEST			7
 #define DATA_RESET		    8
 #define OUT_OF_RANGE	    255 // Wert außerhalb des Bereichs der Test Routinen
+
+// Benennung der Melodien
+#define MELODIE_ANFANG		0
+#define MELODIE_ENDE		1
+#define MELODIE_OK			2
+#define MELODIE_ENTER		3
+#define MELODIE_FEHLER		4
+
+// Sonderzeichen definierem
+#define SMILEY				0
+
+
 
 /******************************************
  *      KONSTANTEN DEFINITIONEN  Ende      *
@@ -298,8 +310,9 @@ extern const unsigned int anzahl_texteingabe;
 // Structure Definition
 struct datensatz    
 {						 
-	String ueberschrift; // 13 Charakters (0 bis 12) pro Armposition
-	unsigned int gewicht[MAX_GEWICHTE]; // Array von 11 Gewichten (0 bis 10), für die Gewichte pro Armposition
+//	String ueberschrift; // 13 Charakters (0 bis 12) pro Armposition
+	char ueberschrift[MAX_STRING]; // 13 Charakters (0 bis 12) pro Armposition
+	unsigned int gewicht[MAX_GEWICHTANZAHL]; // Array von 11 Gewichten (0 bis 10), für die Gewichte pro Armposition
 }; // Structure variable
 
 // Array of structures (0 bis 2) also 3 für die Armpositionen
