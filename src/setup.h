@@ -1,5 +1,10 @@
 #pragma once
 
+
+//  Auf den Laptop Bildschirm schreiben:
+//	Serial.println("ABBRUCH 2");   ///////////////////////////
+
+
 /******************************************
  *      INCLUDE DEFINITIONEN  Anfang        *
  *******************************************/
@@ -170,13 +175,21 @@
 #define BECHER_RECHTS 2
 #define NO_BECHER 3
 
+
+#define EDIT_LCD_CURSOR_SART 3 // Startposition des Cursors bei der Texteingabe im LCD
+#define EDIT_LCD_CURSOR_MAX 15 // Endposition des Cursors bei der Texteingabe im LCD (13 Charakters)
+
+#define EDIT_CHAR_CURSOR_SART 0 // Startposition des Cursors bei der Texteingabe im LCD
+#define LCD_CHARACTER_OFFSET 3 // Offset der LCD Character Position zum String Index Überschriften (0 - 12)
+
 // für die Variable daten vom Typ Datensatz
 #define MAX_DATEN_SATZ 3 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
 // pro Datensatz jeweils einer Armposition zugeordnet
 #define MAX_STRING 13 // 0 bis 12, also 13 Charakters in der Überschrift 
 #define MAX_GEWICHTANZAHL 11 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
 
-#define MAX_POSITIONEN 11 // 0 bis 11, also 12 Positionen (int), zum Positionen Anzeigen und Scrollen
+// für die Variable daten vom Typ Datensatz
+#define MAX_CURSOR_POSITIONEN 11 // 0 bis 11, also 12 Cursorpositionen für die Anzeige und Scrollen der Datensätze
 // Pos 1: in der ersten Zeile  -->  Überschrift (String) - 13 Charakters (bleibt in der 1 Zeile fixiert)
 // Pos 2: einmalig in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g  yyy ml"
 //                                       Gipsgewicht (unsigned int), Wassergewicht (unsigned int) - Mischungsverhältnis
@@ -227,6 +240,8 @@
 
 // Sonderzeichen definierem
 #define SMILEY				0
+#define HERZ				1
+#define CURSOR				2
 
 
 
@@ -307,6 +322,9 @@ extern const char texteingabe[];
 // berechnet die Anzahl der Characters der Texteingabe
 extern const unsigned int anzahl_texteingabe;
 
+// Pointer auf den Character im Character Array, welcher zur Anzeige gebracht wird
+extern unsigned int character_pointer;
+
 // Structure Definition
 struct datensatz    
 {						 
@@ -321,9 +339,10 @@ extern datensatz daten[MAX_DATEN_SATZ];
 extern const unsigned int anzahl_daten;
 
 extern byte smiley[8];  //erstellt Zeichen Smiley
+extern byte herz[8];  //erstellt Zeichen herz
+extern byte cursor[8];  //erstellt Zeichen cursor
 
 
-void init_data();
 
 /******************************************
  *      VARIABLEN DEFINITIONEN  Ende        *

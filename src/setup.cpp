@@ -1,5 +1,6 @@
 #include "setup.h"
 
+
 HX711 scale;
 LiquidCrystal lcd(RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7); // LCD Initialisierung
 
@@ -69,12 +70,16 @@ const unsigned int anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0
 
 //  Array mit Zeichen für die Texteingabe
 const char texteingabe[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-	                  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-					  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-					  '-', '+', '*', ' ',					  
-					  0}; // Ende mit Nullzeichen
+	                 		'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+					  		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+					  		'-', '+', '*', ' ',					  
+					       }; // Ende mit Nullzeichen
 // berechnet Anzahl der Characters der Texteingabe, -1 wegen dem Nullzeichen
-const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;  
+const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1; 
+
+// Pointer auf den Character im Character Array, welcher zur Anzeige gebracht wird
+unsigned int character_pointer;
+
 
 // POS 01: Überschrift Eingabe
 
@@ -119,6 +124,27 @@ B01110,
 B00000,
 };
 
+byte herz[8] = {  //erstellt Zeichen Herz
+  B00000,
+  B01010,
+  B11111,
+  B11111,
+  B01110,
+  B00100,
+  B00000,
+  B00000
+};
+
+byte cursor[8] = {  //erstellt Zeichen Cursor
+  B10000,
+  B11000,
+  B01100,
+  B00111,
+  B00111,
+  B01100,
+  B11000,
+  B10000
+};
 
 
 

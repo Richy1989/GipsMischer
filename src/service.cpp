@@ -1,7 +1,5 @@
 #include "service.h"
 
-//  Auf den Bildschirm schreiben:
-//	Serial.println("ABBRUCH 2");   ///////////////////////////
 
 // *********   Armpositionen einlesen und in Variable armposition speichern, negative Logik 	***************
 void read_armposition()
