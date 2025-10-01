@@ -193,15 +193,20 @@
 // Pos 1: in der ersten Zeile  -->  Überschrift (String) - 13 Charakters (bleibt in der 1 Zeile fixiert)
 // Pos 2: einmalig in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g  yyy ml"
 //                                       Gipsgewicht (unsigned int), Wassergewicht (unsigned int) - Mischungsverhältnis
-// Pos 3 bis 5: (3x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g fixiert"
-//                                                        das Gesamtgewicht jeweils um 160 g des Gundgewichtes erhöht
-// Pos 6 bis 10: (5x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g eingabe"
-//                                                        freie Gesamtgewicht Eingabe
-// Position 11 - LCD Anzeige: " Gipsentleerung "
-// Position 12 - LCD Anzeige: " Wasserentnahme "
-// Die Anzeige der Positionen am LCD erfolgt numerisch zweistellig über die ersten beiden links stehenden Charakters
-// gefolgt von einem Leerzeichen, Beispiel: 01 , 02 , ..., "10 ", "11 ", "12 "
+// Pos 3 bis 6: (4x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g GIPSfix"
+//                                                        Fixes Gipsgewicht, jeweils pro Zeile um 160 / 130 g erhöht
+// Pos 7 bis 10: (4x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g GIPSein"
+//                                                        freie Eingabe Gipsgewicht 
+// Position 11 - LCD Anzeige: "-- Gipsenteerung"
+// Position 12 - LCD Anzeige: "-- H2O Entnahme "
+// Die Anzeige der Positionen am LCD erfolgt numerisch zweistellig über die ersten beiden
+// links stehenden Charakters, gefolgt von einem Curserzeichen.
+// Beispiel: 01>, 02>, ..., "10>", "11>", "12>"
 
+// in der Encoder Interruptfunktion wird die Variable Encoder_count_neu verändert.
+// Langsames drehen ist der Zahlensprung +/- 1
+// Schnelles drehen ist der Zahlensprung +/- FAST_INCREMENT (10)
+// die Variable Encoder_count_neu erhält immer ein Zahl aus dem Wertebereich von min_counter bis max_counter
 #define FAST_INCREMENT 10
 
 // Arduino Mega hat 4 KB (4096 bytes) EEPROM Zellen, also 0 bis 4095
@@ -212,12 +217,15 @@
 
 // Maximal messbares Gewicht in Gramm
 #define MAX_GEWICHT 3000
+// Maximal einzugebendes Gewicht in Gramm
+#define MAX_GEWICHT_EINGABE 2000
 
 // Wartezeit in ms
 #define WAIT_TIME_LED  750  // LED Hell- und Dunkelzeit beim service blinken 
 #define WAIT_TIME_2   3000  // ersten 3 Sekunden anzeige
 #define WAIT_TIME_3   5000  // zweiten 2 Sekunden anzeige
-#define WAIT_TIME_4   8000  // dritten 3 Sekunden anzeige
+#define WAIT_TIME_4   8000  // dritten 3 Sekunden anzeige 
+#define ENTPRELL_ZEIT    4  // Tastaturentprellzeit in ms
 
 // Benennung der Service Test Routinen
 #define EEPROM_TEST 		0
@@ -322,9 +330,6 @@ extern const char texteingabe[];
 // berechnet die Anzahl der Characters der Texteingabe
 extern const unsigned int anzahl_texteingabe;
 
-// Pointer auf den Character im Character Array, welcher zur Anzeige gebracht wird
-extern unsigned int character_pointer;
-
 // Structure Definition
 struct datensatz    
 {						 
@@ -337,6 +342,12 @@ struct datensatz
 extern datensatz daten[MAX_DATEN_SATZ]; 
 // berechnet die Anzahl der Byts der Variablen daten
 extern const unsigned int anzahl_daten;
+
+//  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
+extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
+extern unsigned long wasserverhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+
+extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
 extern byte smiley[8];  //erstellt Zeichen Smiley
 extern byte herz[8];  //erstellt Zeichen herz

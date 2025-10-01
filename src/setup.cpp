@@ -1,6 +1,5 @@
 #include "setup.h"
 
-
 HX711 scale;
 LiquidCrystal lcd(RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7); // LCD Initialisierung
 
@@ -52,7 +51,7 @@ const unsigned int relais[] = {
 };
 
 //  Berechnet die Anzahl der Relais;
-//  Relais = Anzahl Byts der Variablen relais geteilt durch die Bytegröße eines Arrayelements 
+//  Relais = Anzahl Byts der Variablen relais geteilt durch die Bytegröße eines Arrayelements
 const unsigned int anzahlrelais = sizeof(relais) / sizeof(relais[0]); // Anzahl der Relais berechnet
 
 const unsigned int positiveTones[] = {1000, 1200, 1400, 1600}; // Positive Töne
@@ -61,36 +60,69 @@ const unsigned int negativeTones[] = {500, 300, 200};		   // Negative Töne
 unsigned long start_time;
 
 // Array für die Test Routinen
-const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST, 
-	                                  TON_TEST, ARM_TEST, WAAGE_KALIBRIERUNG, 
+const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST,
+									  TON_TEST, ARM_TEST, WAAGE_KALIBRIERUNG,
 									  WAAGE_TEST, RELAIS_TEST, DATA_RESET};
 // berechnet die Anzahl der test_routinen in der Variablen test_routinen
 // test_routinen = Anzahl Byts der Variablen test_routinen geteilt durch die Bytegröße eines Arrayelements
 const unsigned int anzahl_tests = sizeof(test_routinen) / sizeof(test_routinen[0]);
 
 //  Array mit Zeichen für die Texteingabe
-const char texteingabe[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-	                 		'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-					  		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-					  		'-', '+', '*', ' ',					  
-					       }; // Ende mit Nullzeichen
+const char texteingabe[] = {
+	'A',
+	'B',
+	'C',
+	'D',
+	'E',
+	'F',
+	'G',
+	'H',
+	'I',
+	'J',
+	'K',
+	'L',
+	'M',
+	'N',
+	'O',
+	'P',
+	'Q',
+	'R',
+	'S',
+	'T',
+	'U',
+	'V',
+	'W',
+	'X',
+	'Y',
+	'Z',
+	'0',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'-',
+	'+',
+	'*',
+	' ',
+}; // Ende mit Nullzeichen
 // berechnet Anzahl der Characters der Texteingabe, -1 wegen dem Nullzeichen
-const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1; 
-
-// Pointer auf den Character im Character Array, welcher zur Anzeige gebracht wird
-unsigned int character_pointer;
-
+const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;
 
 // POS 01: Überschrift Eingabe
 
 // POS 02: Gewicht[0]:Referenzgewicht Gips   (eingeben)
 // POS 02: Gewicht[1]:Referenzgewicht Wasser (eingeben)
 
-// POS 03: Gewicht[2]:Gipsgewicht fixiert (160g)
-// POS 04: Gewicht[3]:Gipsgewicht fixiert (160g + 160g = 320g)
-// POS 05: Gewicht[4]:Gipsgewicht fixiert (160g + 160g + 160g = 480g)
+// POS 03: Gewicht[2]:Gipsgewicht fixiert (160g) /  (130g)
+// POS 04: Gewicht[3]:Gipsgewicht fixiert (160g + 160g = 320g) / (130g + 130g = 260g)
+// POS 05: Gewicht[4]:Gipsgewicht fixiert (160g + 160g + 160g = 480g) / (130g + 130g + 130g = 390g)
+// POS 06: Gewicht[4]:Gipsgewicht fixiert (160g + 160g + 160g + 160g = 640g) / (130g + 130g + 130g + 130g = 520g)
 
-// POS 06: Gewicht[5]:Gipsgewicht variabel  (eingeben)
 // POS 07: Gewicht[6]:Gipsgewicht variabel  (eingeben)
 // POS 08: Gewicht[7]:Gipsgewicht variabel  (eingeben)
 // POS 09: Gewicht[8]:Gipsgewicht variabel  (eingeben)
@@ -100,51 +132,52 @@ unsigned int character_pointer;
 // POS 12: Wasserentnahme (keine Gewicht, keine Eingabe)
 
 // Array of structures (0 bis 2), also 3 für die Armpositionen
-datensatz daten[MAX_DATEN_SATZ] = {}; 
+datensatz daten[MAX_DATEN_SATZ] = {};
 // berechnet die Anzahl der Byts der Variablen daten, zur Berechnung der EEPROM Speicheradressen
-const unsigned int anzahl_daten = sizeof(daten);  //  Bytegröße der Variablen daten 13+22 = 35*3 = 105 Byts)
+const unsigned int anzahl_daten = sizeof(daten); //  Bytegröße der Variablen daten 13+22 = 35*3 = 105 Byts)
 
 void init_data()
 {
-/* daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
- daten[0].gewicht[0] = 0;  	    	// Beispiel Initialisierung der Gewichte
- daten[0].gewicht[1] = 0;
- ..........
- daten[0].gewicht[10] = 0;
- */
+	/* daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
+	 daten[0].gewicht[0] = 0;  	    	// Beispiel Initialisierung der Gewichte
+	 daten[0].gewicht[1] = 0;
+	 ..........
+	 daten[0].gewicht[10] = 0;
+	 */
 }
 
-byte smiley[8] = { //erstellt Zeichen Smiley
-B00000,
-B10001,
-B00000,
-B00000,
-B10001,
-B01110,
-B00000,
+//  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
+unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
+unsigned long wasserverhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
+
+byte smiley[8] = {
+	// erstellt Zeichen Smiley
+	B00000,
+	B10001,
+	B00000,
+	B00000,
+	B10001,
+	B01110,
+	B00000,
 };
 
-byte herz[8] = {  //erstellt Zeichen Herz
-  B00000,
-  B01010,
-  B11111,
-  B11111,
-  B01110,
-  B00100,
-  B00000,
-  B00000
-};
+byte herz[8] = { // erstellt Zeichen Herz
+	B00000,
+	B01010,
+	B11111,
+	B11111,
+	B01110,
+	B00100,
+	B00000,
+	B00000};
 
-byte cursor[8] = {  //erstellt Zeichen Cursor
-  B10000,
-  B11000,
-  B01100,
-  B00111,
-  B00111,
-  B01100,
-  B11000,
-  B10000
-};
-
-
-
+byte cursor[8] = { // erstellt Zeichen Cursor
+	B10000,
+	B11000,
+	B11100,
+	B11111,
+	B11111,
+	B11100,
+	B11000,
+	B10000};
