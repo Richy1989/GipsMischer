@@ -226,6 +226,7 @@
 #define WAIT_TIME_3   5000  // zweiten 2 Sekunden anzeige
 #define WAIT_TIME_4   8000  // dritten 3 Sekunden anzeige 
 #define ENTPRELL_ZEIT    4  // Tastaturentprellzeit in ms
+#define WAAGE_READY_TIME 1000  // Wartezeit bis die Waage bereit ist in ms
 
 // Benennung der Service Test Routinen
 #define EEPROM_TEST 		0
@@ -283,6 +284,7 @@ extern float Leergew_einheiten;
 extern float Eichgew_einheiten;
 extern float Gewicht;
 extern float Gewicht_alt;
+extern float Teilgewicht;
 extern float Gesamtgewicht;
 extern float Korrekturfaktor;
 

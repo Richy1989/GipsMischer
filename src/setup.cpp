@@ -13,6 +13,7 @@ float Leergew_einheiten;
 float Eichgew_einheiten;
 float Gewicht;
 float Gewicht_alt;
+float Teilgewicht;
 float Gesamtgewicht;
 float Korrekturfaktor;
 
