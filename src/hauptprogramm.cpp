@@ -225,7 +225,13 @@ void mainprogramm()
 
                     Encoder_count_neu = min_counter; // Verbleib im Manü case 0 (Überschrift)
 
-           //         write_to_LCD[Encoder_count_neu] = true; // damit wieder einmalig auf den LCD geschrieben wird
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    {
+                        write_to_LCD[i] = true; // damit immer nur einmalig auf den LCD geschrieben wird
+                    } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    write_to_LCD[write_to_LCD[0]] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+
+                    //         write_to_LCD[Encoder_count_neu] = true; // damit wieder einmalig auf den LCD geschrieben wird
 
                 } // end if (!digitalRead(ENTER_PIN))
 
@@ -241,7 +247,7 @@ void mainprogramm()
                     //  Zeichen "cursor" anzeigen
                     lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
                     lcd.print("02     g      ml");
-                //  lcd.print("02>1234g  1234ml");  erste Zahl ab 3. Stelle, zweite Zahl ab 10. Stelle
+                    //  lcd.print("02>1234g  1234ml");  erste Zahl ab 3. Stelle, zweite Zahl ab 10. Stelle
 
                     lcd.setCursor(2, 1);     // Setz Curser auf Charakter 3, Zeile 2
                     lcd.write(byte(CURSOR)); //  Zeichen "cursor" anzeigen
@@ -263,8 +269,6 @@ void mainprogramm()
                     } //  end while (digitalRead(ENTER_PIN))
                     delay(ENTPRELL_ZEIT); // Entprellzeit
 
-	Serial.println("erster ENTER");   ///////////////////////////
-
                     min_counter = 0;                   // Minimalwert für Encoder 0
                     max_counter = MAX_GEWICHT_EINGABE; // Maximalwert für Encoder (Gewicht 2000 g)
 
@@ -282,19 +286,19 @@ void mainprogramm()
                             lcd.print("    ");            //  Platzhalter zum Löschen der alten Zahl
                             lcd.setCursor(3, 1);          // Setz Curser auf Charakter 4, Zeile 2
                             lcd.print(Encoder_count_neu); //  Referenzmenge Gipsgewicht in g
-                                                   
-                        lcd.blink();
+
+                            lcd.blink();
                         } // end if (Encoder_count_neu != Encoder_count_alt)
                     } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
 
-                 lcd.noBlink(); // Cursor blinken ausschalten
+                    lcd.noBlink(); // Cursor blinken ausschalten
 
                     delay(ENTPRELL_ZEIT); // Entprellzeit
                     while (!digitalRead(ENTER_PIN))
                     { // warten bis Taste ENTER losgelasen wird
                     } //  end while (digitalRead(ENTER_PIN))
                     delay(ENTPRELL_ZEIT); // Entprellzeit
-Serial.println("zweiter ENTER");   ///////////////////////////
+
                     //  Referenzmenge  Gipsgewicht in die Datenstruktur schreiben
                     daten[armposition].gewicht[0] = Encoder_count_neu;
 
@@ -311,12 +315,12 @@ Serial.println("zweiter ENTER");   ///////////////////////////
                             lcd.setCursor(10, 1);         // Setz Curser auf Charakter 1, Zeile 2
                             lcd.print("    ");            //  öschen der alten Zahl
                             lcd.setCursor(10, 1);         // Setz Curser auf Charakter 1, Zeile 2
-                           lcd.print(Encoder_count_neu); //  Referenzmenge Wasser in g
-                         lcd.blink();
+                            lcd.print(Encoder_count_neu); //  Referenzmenge Wasser in g
+                            lcd.blink();
                         } // end if (Encoder_count_neu != Encoder_count_alt)
                     } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
-Serial.println("dritter ENTER");   ///////////////////////////
-                   lcd.noBlink();        // Cursor blinken ausschalten
+
+                    lcd.noBlink(); // Cursor blinken ausschalten
 
                     delay(ENTPRELL_ZEIT); // Entprellzeit
                     while (!digitalRead(ENTER_PIN))
@@ -332,16 +336,20 @@ Serial.println("dritter ENTER");   ///////////////////////////
                     // Schreiben der komletten Variablen (Datenstruktur) Daten auf den EEPROM, ab Adresse 0
 
                     // Neue Gewichtverhältnisse berechnen
-                    gesamtgewicht[armposition] = daten[armposition].gewicht[0] + daten[armposition].gewicht[1];
                     // Mischungsverhältnisse (in Prozent. als 0,xxx Zahl) = Teilgewicht / Gesamtgewicht
-                    wasserverhaeltnis[armposition] = daten[armposition].gewicht[1] / gesamtgewicht[armposition];
-
-                    min_counter = 0;                     // Minimalwert für Encoder
-                    max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+                    wasserverhaeltnis[armposition] = 1 + (daten[armposition].gewicht[1] / daten[armposition].gewicht[0]); // Wasser Referenzgewicht  /  Gips Referenzgewicht
+                    // Wassergewicht[i] = Gipsgewicht[i] * wasserverhaeltnis[i]
+                    
+                    min_counter = 0;                                                        // Minimalwert für Encoder
+                    max_counter = MAX_CURSOR_POSITIONEN;                                    // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
 
                     Encoder_count_neu = 1; // Verbleib im Manü case 1 (Überschrift)
 
-                    //    write_to_LCD[Encoder_count_neu] = true; // damit wieder einmalig auf den LCD geschrieben wird
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    {
+                        write_to_LCD[i] = true; // damit immer nur einmalig auf den LCD geschrieben wird
+                    } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    write_to_LCD[write_to_LCD[1]] = false; // damit immer nur einmalig auf den LCD geschrieben wird
 
                 } // end if (!digitalRead(ENTER_PIN))
 
@@ -352,6 +360,69 @@ Serial.println("dritter ENTER");   ///////////////////////////
             case 3: /*  POS 04 - Gipsgewicht fix immer um 160/130 g erhöht ==> 320 g / 260g */
             case 4: /*  POS 05 - Gipsgewicht fix immer um 160/130 g erhöht ==> 480 g / 390g */
             case 5: /*  POS 06 - Gipsgewicht fix immer um 160/130 g erhöht ==> 640 g / 520g */
+                if (write_to_LCD[Encoder_count_neu])
+                {
+                    lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+                    lcd.print("0      g fixiert");
+                    lcd.setCursor(1, 1);              // Setz Curser auf Charakter 2, Zeile 2
+                    lcd.print(Encoder_count_neu + 1); //  Positionsanzeige
+                    lcd.write(byte(CURSOR));
+                    lcd.print(daten[armposition].gewicht[Encoder_count_neu]); //  Referenzmenge Gipsgewicht in g
+
+                    write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+                } // end if (erstmalig)
+
+                // Gips Abfüllung beginnt ---------------------------------------
+                if (!digitalRead(I_O_PIN))
+                {
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    while (!digitalRead(I_O_PIN))
+                    { // warten bis Taste I/O  losgelasen wird
+                    } //  end while (digitalRead(ENTER_PIN))
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+
+                    Gesamtgewicht = daten[armposition].gewicht[Encoder_count_neu]; // Gipsgewicht
+
+                    digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
+                    digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
+
+                    do
+                    {
+                        // Differenz der Gewichtseinheit minus der Leereinheitdurch,
+                        // Dividiert Korrekturfaktor
+                        Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+                    } while (Gewicht < Gesamtgewicht); // Auf Gipsgewicht prüfen
+
+                    digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
+                    digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
+
+                    //  Wasser Abfüllung beginnt ---------------------------------------
+
+                    // ACHTUNG Formel ist gekürzt und Herausgehoben
+                    Gesamtgewicht =                    // Gesamtgewicht =
+                        Gesamtgewicht                  // Gipsgewicht
+                        *                              // +
+                        wasserverhaeltnis[armposition] // Wassergewicht
+                        ;
+
+                    digitalWrite(relais[armposition + 6], EIN); // Relais Ventil [ARM Position] einschalten
+                    digitalWrite(relais[RELAIS_WP], EIN);       // Relais Wasserpumpe einschalten
+
+                    do
+                    {
+                        // Differenz der Gewichtseinheit minus der Leereinheitdurch,
+                        // Dividiert Korrekturfaktor
+                        Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+
+                    } while (Gewicht < Gesamtgewicht); // Auf Gipsgewicht + Wassergewicht prüfen
+
+                    digitalWrite(relais[RELAIS_WP], AUS);       // Relais Wasserpumpe ausschalten
+                    digitalWrite(relais[armposition + 6], AUS); // Relais Ventil [ARM Position] ausschalten
+
+                    Musik(MELODIE_OK);
+
+                  //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                } // end    if (!digitalRead(I_O_PIN))
 
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
                 break;                            //  end case 2 - 5

@@ -13,6 +13,7 @@ float Leergew_einheiten;
 float Eichgew_einheiten;
 float Gewicht;
 float Gewicht_alt;
+float Gesamtgewicht;
 float Korrekturfaktor;
 
 // Zahlenwert im Encoder
@@ -44,10 +45,10 @@ unsigned long _pauseLength = 25000;
 //  Ventil Links (A15), Ventil Mitte A10), Ventil Rechts (A13)
 //  Wasserpumpe (A12)
 const unsigned int relais[] = {
-	RELAIS_ML, RELAIS_MM, RELAIS_MR, // Motoren Relais Pins
-	RELAIS_RL, RELAIS_RM, RELAIS_RR, // Rüttler Relais Pins
-	RELAIS_VL, RELAIS_VM, RELAIS_VR, // Ventile Relais Pins
-	RELAIS_WP						 // Wasserpumpe Relais Pin
+	RELAIS_ML, RELAIS_MM, RELAIS_MR, // Motoren Relais     00, 01, 02
+	RELAIS_RL, RELAIS_RM, RELAIS_RR, // Rüttler Relais     03, 04, 05
+	RELAIS_VL, RELAIS_VM, RELAIS_VR, // Ventile Relais     06, 07, 08
+	RELAIS_WP						 // Wasserpumpe Relais 09 
 };
 
 //  Berechnet die Anzahl der Relais;
@@ -121,7 +122,7 @@ const unsigned int anzahl_texteingabe = sizeof(texteingabe) - 1;
 // POS 03: Gewicht[2]:Gipsgewicht fixiert (160g) /  (130g)
 // POS 04: Gewicht[3]:Gipsgewicht fixiert (160g + 160g = 320g) / (130g + 130g = 260g)
 // POS 05: Gewicht[4]:Gipsgewicht fixiert (160g + 160g + 160g = 480g) / (130g + 130g + 130g = 390g)
-// POS 06: Gewicht[4]:Gipsgewicht fixiert (160g + 160g + 160g + 160g = 640g) / (130g + 130g + 130g + 130g = 520g)
+// POS 06: Gewicht[5]:Gipsgewicht fixiert (160g + 160g + 160g + 160g = 640g) / (130g + 130g + 130g + 130g = 520g)
 
 // POS 07: Gewicht[6]:Gipsgewicht variabel  (eingeben)
 // POS 08: Gewicht[7]:Gipsgewicht variabel  (eingeben)
@@ -147,9 +148,9 @@ void init_data()
 }
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
-unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
+//  unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
 unsigned long wasserverhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
-unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
+// unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
 
 byte smiley[8] = {
 	// erstellt Zeichen Smiley

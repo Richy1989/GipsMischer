@@ -186,7 +186,7 @@
 #define MAX_DATEN_SATZ 3 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
 // pro Datensatz jeweils einer Armposition zugeordnet
 #define MAX_STRING 13 // 0 bis 12, also 13 Charakters in der Überschrift 
-#define MAX_GEWICHTANZAHL 11 // 0 bis 10, also 11 --> 10 Gewichte und 1 Mischungsverhältnis
+#define MAX_GEWICHTANZAHL 10 // 0 bis 9, also 10 Gewichte
 
 // für die Variable daten vom Typ Datensatz
 #define MAX_CURSOR_POSITIONEN 11 // 0 bis 11, also 12 Cursorpositionen für die Anzeige und Scrollen der Datensätze
@@ -251,6 +251,16 @@
 #define HERZ				1
 #define CURSOR				2
 
+// Vordefinierte Gips FIX Gewichte
+#define FIXGEWICHT_01	    130
+#define FIXGEWICHT_02       260
+#define FIXGEWICHT_03       390 
+#define FIXGEWICHT_04       520
+// Reserve Fixgewichte
+#define FIXGEWICHT_11	    160
+#define FIXGEWICHT_12       320
+#define FIXGEWICHT_13       480 
+#define FIXGEWICHT_14       640
 
 
 /******************************************
@@ -273,6 +283,7 @@ extern float Leergew_einheiten;
 extern float Eichgew_einheiten;
 extern float Gewicht;
 extern float Gewicht_alt;
+extern float Gesamtgewicht;
 extern float Korrekturfaktor;
 
 extern unsigned int armposition;
@@ -335,7 +346,7 @@ struct datensatz
 {						 
 //	String ueberschrift; // 13 Charakters (0 bis 12) pro Armposition
 	char ueberschrift[MAX_STRING]; // 13 Charakters (0 bis 12) pro Armposition
-	unsigned int gewicht[MAX_GEWICHTANZAHL]; // Array von 11 Gewichten (0 bis 10), für die Gewichte pro Armposition
+	unsigned int gewicht[MAX_GEWICHTANZAHL]; // Array von 10 Gewichten (0 bis 9), für die Gewichte pro Armposition
 }; // Structure variable
 
 // Array of structures (0 bis 2) also 3 für die Armpositionen
@@ -344,10 +355,9 @@ extern datensatz daten[MAX_DATEN_SATZ];
 extern const unsigned int anzahl_daten;
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
-extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
+//extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
 extern unsigned long wasserverhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
-
-extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
+//extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
 extern byte smiley[8];  //erstellt Zeichen Smiley
 extern byte herz[8];  //erstellt Zeichen herz

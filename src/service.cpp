@@ -1,6 +1,5 @@
 #include "service.h"
 
-
 // *********   Armpositionen einlesen und in Variable armposition speichern, negative Logik 	***************
 void read_armposition()
 {
@@ -132,9 +131,9 @@ void service()
 
 				if (!digitalRead(ENTER_PIN)) // Wenn Entertaste gedrückt ist, also low
 				{
-					lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-					lcd.print("EEPROM TEST :I/O");  // Text in erster Zeile anzeigen
-					lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+					lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
+					lcd.print("EEPROM TEST :I/O"); // Text in erster Zeile anzeigen
+					lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
 					lcd.print("Adr:     Dat    "); // Text in zweiter Zeile anzeigen");
 
 					// Min- Maxwerte für Encoder setzen
@@ -159,7 +158,7 @@ void service()
 							lcd.print("    ");						   // Lösche die Zeile
 							lcd.setCursor(12, 1);					   // Setz Curser auf Charakter 13, Zeile 2
 							lcd.print(EEPROM.read(Encoder_count_neu)); // Daten der Adresse (FF = leer) anzeigen
-							lcd.setCursor(15, 1);	
+							lcd.setCursor(15, 1);
 							lcd.print(char(EEPROM.read(Encoder_count_neu))); // Daten der Adresse als charakter anzeigen
 						} // end if (Encoder_count_neu != Encoder_count_alt)
 					} while (digitalRead(I_O_PIN)); // solange I/O Taste nicht gedrückt ist, also high ist
@@ -693,10 +692,10 @@ void service()
 							//  lcd.print("warten  loeschen");
 
 							//  EEPROM komplett löschen
-						//	for (int i = 0; i <= MAX_EEPROM_ADRESSE; i++)
-						//		EEPROM.update(i, 255); // EEPROM löschen (FF = leer)
+							//	for (int i = 0; i <= MAX_EEPROM_ADRESSE; i++)
+							//		EEPROM.update(i, 255); // EEPROM löschen (FF = leer)
 
-						//	Musik(MELODIE_OK);
+							//	Musik(MELODIE_OK);
 
 							lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
 							lcd.print("warten programm");
@@ -704,11 +703,26 @@ void service()
 							//  erstmalige Dateneingabe initialisieren
 							for (int i = 0; i < ARM_ANZAHL; i++) // 0 bis 2 Arme (3 Arme)
 							{
-								//		daten[i].ueberschrift = "UEBERSCHRIFT*"; // Initialisierung der Überschrift - 13 Caraktere
 								strcpy(daten[i].ueberschrift, "UEBERSCHRIFT1"); // Initialisierung der Überschrift - 13 Caraktere
-							
-								for (int j = 0; j < MAX_GEWICHTANZAHL; j++) // 0 bis 10 Gewichte pro Arm (11 Gewichte)
-									daten[i].gewicht[j] = 0;				// Initialisierung der Gewichte
+
+								for (int j = 0; j < (MAX_GEWICHTANZAHL - 1); j++) // 0 bis 9 Gewichte pro Arm (10 Gewichte)
+									daten[i].gewicht[j] = 0;
+
+								// Vorfixierte Gewichte in g
+								if (i == 1) // Bei ARM mitte
+								{
+									daten[i].gewicht[2] = FIXGEWICHT_01;
+									daten[i].gewicht[3] = FIXGEWICHT_02;
+									daten[i].gewicht[4] = FIXGEWICHT_03;
+									daten[i].gewicht[5] = FIXGEWICHT_04;
+								}//  end if (i == 1)
+								else
+								{ // Bei ARM links und rechts
+									daten[i].gewicht[2] = FIXGEWICHT_11;
+									daten[i].gewicht[3] = FIXGEWICHT_12;
+									daten[i].gewicht[4] = FIXGEWICHT_13;
+									daten[i].gewicht[5] = FIXGEWICHT_14;
+								}  // end else if (i == 1)
 							} // end for (int i = 0; i < ARM_ANZAHL; i++)
 
 							// Datenspeicherung im EEPROM:
