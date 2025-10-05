@@ -20,6 +20,7 @@ float Korrekturfaktor;
 // Zahlenwert im Encoder
 int Encoder_count_neu = 0;
 int Encoder_count_alt = -1;
+int Encoder_count_store;
 
 // definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
 int max_counter = 500;

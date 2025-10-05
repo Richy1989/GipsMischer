@@ -6,7 +6,7 @@
 
 void greeting()
 {
-    return;
+    //   return;
 
     start_time = millis(); // Startzeit für Begrüßung setzen
 
@@ -106,17 +106,17 @@ void check_armposition()
 void LCD_fortschtitt(float max, float teil)
 {
     int x;
-    
-    x = (int)(((teil / max ) * 13) + 0.5); // Wert auf 13 Character aufteilen
+
+    x = (int)(((teil / max) * 13) + 0.5); // Wert auf 13 Character aufteilen
 
     lcd.setCursor(3, 1); // Setz Curser auf Charakter 4, Zeile 2
-   
-    for (int i = 1; i < 14; i++) 
+
+    for (int i = 1; i < 14; i++)
     {
-        if (i <= x )
+        if (i <= x)
             lcd.write(byte(255)); //  voll ausgefülltes Rechteck (zeigt Fortschritt an)
         else
-              lcd.write(byte(196)); //  nicht ausgefülltes Rechteck 
+            lcd.write(byte(196)); //  nicht ausgefülltes Rechteck
     } // end for (int i = 0; i < 16; i++)
 
 } // end LCD_fortschtitt(float prozent)
@@ -244,20 +244,18 @@ void mainprogramm()
                     min_counter = 0;                     // Minimalwert für Encoder
                     max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
 
-                    Encoder_count_neu = min_counter; // Verbleib im Manü case 0 (Überschrift)
+                    Encoder_count_neu = 0; // Verbleib im Manü case 0, (POS1 Überschrift)
 
-                    for (int i = 0; i < MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
                     {
                         write_to_LCD[i] = true; // damit immer nur einmalig auf den LCD geschrieben wird
                     } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
                     write_to_LCD[write_to_LCD[0]] = false; // damit immer nur einmalig auf den LCD geschrieben wird
 
-                    //         write_to_LCD[Encoder_count_neu] = true; // damit wieder einmalig auf den LCD geschrieben wird
-
                 } // end if (!digitalRead(ENTER_PIN))
 
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-                break;                            //  end case 0
+                break;                            //  end case 0 (POS 01 - Überschrift)
 
             case 1: /*  POS 02 - Referenz Gipsgewicht und Wassergewicht */
                 if (write_to_LCD[Encoder_count_neu])
@@ -290,7 +288,7 @@ void mainprogramm()
                     } //  end while (digitalRead(ENTER_PIN))
                     delay(ENTPRELL_ZEIT); // Entprellzeit
 
-                    min_counter = 0;                   // Minimalwert für Encoder 0
+                    min_counter = MIN_GEWICHT_EINGABE; // Minimalwert für Encoder 1 (Division durch 0 vermeiden)
                     max_counter = MAX_GEWICHT_EINGABE; // Maximalwert für Encoder (Gewicht 2000 g)
 
                     //  Bestehendes Gipsgewicht in den Editor schreiben
@@ -325,7 +323,6 @@ void mainprogramm()
 
                     //  Bestehende Wassermenge in den Editor schreiben
                     Encoder_count_neu = daten[armposition].gewicht[1];
-                    Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                     do
                     { // editiereb der Referenzmenge Wassermenge -------------------------------
@@ -352,7 +349,7 @@ void mainprogramm()
                     //  Referenzmenge  Wassermenge in die Datenstruktur schreiben
                     daten[armposition].gewicht[1] = Encoder_count_neu;
 
-                    // Referenzmenge Gipsgewicht und Wassermenge wurde editiert, daher Datenspeicherung im EEPROM:
+                    // Referenzmenge Gipsgewicht und Wassermenge wurden editiert, daher Datenspeicherung im EEPROM:
                     EEPROM.put(0, daten);
                     // Schreiben der komletten Variablen (Datenstruktur) Daten auf den EEPROM, ab Adresse 0
 
@@ -364,9 +361,9 @@ void mainprogramm()
                     min_counter = 0;                     // Minimalwert für Encoder
                     max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
 
-                    Encoder_count_neu = 1; // Verbleib im Manü case 1 (Überschrift)
+                    Encoder_count_neu = 1; // Verbleib im Manü case 1, (POS 02 - Referenz Gipsgewicht und Wassergewicht )
 
-                    for (int i = 0; i < MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
                     {
                         write_to_LCD[i] = true; // damit immer nur einmalig auf den LCD geschrieben wird
                     } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
@@ -375,7 +372,7 @@ void mainprogramm()
                 } // end if (!digitalRead(ENTER_PIN))
 
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-                break;                            //  end case 1
+                break;                            //  end case 1 (POS 02 - Referenz Gipsgewicht und Wassergewicht )
 
             case 2: /*  POS 03 - Gipsgewicht fix immer um 160/130 g erhöht ==> 160 g / 130g */
             case 3: /*  POS 04 - Gipsgewicht fix immer um 160/130 g erhöht ==> 320 g / 260g */
@@ -471,22 +468,23 @@ void mainprogramm()
 
                     Musik(MELODIE_OK);
 
-                    for (int i = 0; i < MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
                     {
                         write_to_LCD[i] = true; // // LCD Grundanzeige wieder herstellen
                     } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
                     // LCD wird auf jeden Fall wieder beschrieben
+                    write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
 
                     //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                 } // end    if (!digitalRead(I_O_PIN))
 
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-                break;                            //  end case 2 - 5
+                break;                            //  end case 2 - 5, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
 
-            case 6: /*  POS 07 - Gipsgewicht in g eingeben default ist 0  */
-            case 7: /*  POS 08 - Gipsgewicht in g eingeben default ist 0  */
-            case 8: /*  POS 09 - Gipsgewicht in g eingeben default ist 0  */
-            case 9: /*  POS 10 - Gipsgewicht in g eingeben default ist 0  */
+            case 6: /*  POS 07 - Gipsgewicht in g eingeben default ist 1  */
+            case 7: /*  POS 08 - Gipsgewicht in g eingeben default ist 1  */
+            case 8: /*  POS 09 - Gipsgewicht in g eingeben default ist 1  */
+            case 9: /*  POS 10 - Gipsgewicht in g eingeben default ist 1  */
                 if (write_to_LCD[Encoder_count_neu])
                 {
                     lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
@@ -499,18 +497,245 @@ void mainprogramm()
                     write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
                 } // end if (erstmalig)
 
+                // Gipsmenge eingeben beginnt ---------------------------------------
+                if (!digitalRead(ENTER_PIN))
+                {
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    while (!digitalRead(ENTER_PIN))
+                    { // warten bis Taste ENTER losgelasen wird
+                    } //  end while (digitalRead(ENTER_PIN))
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+
+                    Encoder_count_store = Encoder_count_neu; // Zwischenspeicherung der Position
+
+                    min_counter = MIN_GEWICHT_EINGABE; // Minimalwert für Encoder 1 (Division durch 0 vermeiden)
+                    max_counter = MAX_GEWICHT_EINGABE; // Maximalwert für Encoder (Gewicht 2000 g)
+
+                    //  Bestehendes Gipsgewicht in den Editor schreiben
+                    Encoder_count_neu = daten[armposition].gewicht[0];
+                    Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                    do
+                    { // editiereb der Referenzmenge Gipsgewicht  -------------------------------
+                        if (Encoder_count_neu != Encoder_count_alt)
+                        {
+                            Encoder_count_alt = Encoder_count_neu;
+
+                            lcd.setCursor(3, 1);          // Setz Curser auf Charakter 4, Zeile 2
+                            lcd.print("    ");            //  Platzhalter zum Löschen der alten Zahl
+                            lcd.setCursor(3, 1);          // Setz Curser auf Charakter 4, Zeile 2
+                            lcd.print(Encoder_count_neu); //  Referenzmenge Gipsgewicht in g
+
+                            lcd.blink();
+                        } // end if (Encoder_count_neu != Encoder_count_alt)
+                    } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
+
+                    lcd.noBlink(); // Cursor blinken ausschalten
+
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    while (!digitalRead(ENTER_PIN))
+                    { // warten bis Taste ENTER losgelasen wird
+                    } //  end while (digitalRead(ENTER_PIN))
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+
+                    //  Referenzmenge  Gipsgewicht in die Datenstruktur schreiben
+                    daten[armposition].gewicht[0] = Encoder_count_neu;
+
+                    // Referenzmenge Gipsgewicht und Wassermenge wurden editiert, daher Datenspeicherung im EEPROM:
+                    EEPROM.put(0, daten);
+                    // Schreiben der komletten Variablen (Datenstruktur) Daten auf den EEPROM, ab Adresse 0
+
+                    // Neue Gewichtverhältnisse berechnen
+                    // Mischungsverhältnisse (in Prozent. als 0,xxx Zahl) = Teilgewicht / Gesamtgewicht
+                    wasserverhaeltnis[armposition] = 1 + (daten[armposition].gewicht[1] / daten[armposition].gewicht[0]); // Wasser Referenzgewicht  /  Gips Referenzgewicht
+                    // Wassergewicht[i] = Gipsgewicht[i] * wasserverhaeltnis[i]
+
+                    min_counter = 0;                     // Minimalwert für Encoder
+                    max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                    //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 6, 7, 8, 9
+                    Encoder_count_neu = Encoder_count_store; // Rückkehr zur ursprünglichen Position
+
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    {
+                        write_to_LCD[i] = true; // // LCD Grundanzeige wieder herstellen
+                    } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    // LCD wird auf jeden Fall wieder beschrieben
+                    write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+
+                } // end if (!digitalRead(ENTER_PIN))
+
+                // Gips- / Wasser-Abfüllung beginnt ---------------------------------------
+                if (!digitalRead(I_O_PIN))
+                {
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    while (!digitalRead(I_O_PIN))
+                    { // warten bis Taste I/O  losgelasen wird
+                    } //  end while (digitalRead(ENTER_PIN))
+                    delay(ENTPRELL_ZEIT); // Entprellzeit
+
+                    start_time = millis();
+
+                    while (!scale.is_ready()) // scale.is_ready --> Waage ist bereit wenn true
+                    {
+                        if (millis() - start_time < WAAGE_READY_TIME)
+                        {
+                            lcd.setCursor(3, 1); // Setz Curser auf Charakter 4, Zeile 2
+                            lcd.print("Waage defekt!");
+                            Musik(MELODIE_FEHLER);
+                            write_to_LCD[Encoder_count_neu] = true; // LCD Grundanzeige wieder herstellen
+                            break;                                  // Abbruch da Wartezeit auf Waage ready zu lange
+                        } // warten bis die Waage bereit ist oder time out
+                    } //  end while (!scale.is_ready())
+
+                    Teilgewicht = daten[armposition].gewicht[Encoder_count_neu]; // Gipsgewicht
+
+                    // ACHTUNG Formel ist gekürzt und Herausgehoben
+                    Gesamtgewicht =                    // Gesamtgewicht =
+                        Teilgewicht                    // Gipsgewicht
+                        *                              // +
+                        wasserverhaeltnis[armposition] // Wassergewicht
+                        ;
+
+                    digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
+                    digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
+
+                    Serial.print("Gewicht SOLL "); ///////////////////////////
+                    Serial.println(Gesamtgewicht); ///////////////////////////
+                    do
+                    {
+                        // Differenz der Gewichtseinheit minus der Leereinheitdurch,
+                        // Dividiert Korrekturfaktor
+                        Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+
+                        Serial.println("Gewicht IST "); ///////////////////////////
+                        Serial.println(Gewicht);        ///////////////////////////
+
+                        LCD_fortschtitt(Gesamtgewicht, Gewicht); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
+                    } while (Teilgewicht < Gesamtgewicht); // Auf Gipsgewicht prüfen
+
+                    digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
+                    digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
+
+                    //  Wasser Abfüllung beginnt ---------------------------------------
+
+                    digitalWrite(relais[armposition + 6], EIN); // Relais Ventil [ARM Position] einschalten
+                    digitalWrite(relais[RELAIS_WP], EIN);       // Relais Wasserpumpe einschalten
+
+                    Serial.print("Gewicht SOLL "); ///////////////////////////
+                    Serial.println(Gesamtgewicht); ///////////////////////////
+
+                    do
+                    {
+                        // Differenz der Gewichtseinheit minus der Leereinheitdurch,
+                        // Dividiert Korrekturfaktor
+                        Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+
+                        Serial.println("Gewicht IST "); ///////////////////////////
+                        Serial.println(Gewicht);        ///////////////////////////
+
+                        LCD_fortschtitt(Gesamtgewicht, Gewicht); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
+                    } while (Gewicht < Gesamtgewicht); // Auf Gipsgewicht + Wassergewicht prüfen
+
+                    digitalWrite(relais[RELAIS_WP], AUS);       // Relais Wasserpumpe ausschalten
+                    digitalWrite(relais[armposition + 6], AUS); // Relais Ventil [ARM Position] ausschalten
+
+                    Musik(MELODIE_OK);
+
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    {
+                        write_to_LCD[i] = true; // // LCD Grundanzeige wieder herstellen
+                    } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    // LCD wird auf jeden Fall wieder beschrieben
+                    write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+
+                    //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 6, 7, 8, 9
+                } // end    if (!digitalRead(I_O_PIN))
+
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-                break;                            //  end case 6 - 9
+                break;                            //  end case 6 - 9, (POS 07 - 10 - Gipsgewicht in g eingeben default ist 1)
 
             case 10: /*  POS 11 - Gipsentleerung  */
+                if (write_to_LCD[Encoder_count_neu])
+                {
+                    lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+                    lcd.print("11 GIPSentleeren");
+                    lcd.setCursor(1, 2); // Setz Curser auf Charakter 3, Zeile 2
+                    lcd.write(byte(CURSOR));
+
+                    write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+                } // end if (erstmalig)
+
+                // Gipsentleerrn beginnt ---------------------------------------
+                if (!digitalRead(I_O_PIN))
+                {
+                    on_off_encoder = false; // Encoder Interrupt ausschalten
+
+                    digitalWrite(relais[armposition], EIN); // Relais Gipsmotor[ARM Position] einschalten
+
+                    while (!digitalRead(I_O_PIN)) // warten bis I/O taste losgelasen
+                    {
+                        delay(ENTPRELL_ZEIT);
+                    } // Relais halten bis I/O Taste losgelassen
+
+                    digitalWrite(relais[armposition], AUS); // Relais Gipsmotor [ARM Position] ausschalten
+
+                    on_off_encoder = true; // Encoder Interrupt einschalten
+
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    {
+                        write_to_LCD[i] = true; // // LCD Grundanzeige wieder herstellen
+                    } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    // LCD wird auf jeden Fall wieder beschrieben
+                    write_to_LCD[10] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+
+                    Encoder_count_neu = 10; //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 10
+                } // end  if (!digitalRead(I_O_PIN))
 
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-                break;                            //  end case 10
+                break;                            //  end case 10, (POS 11 - Gipsentleerung)
 
             case 11: /*  POS 12 - Wasserentnahme  */
 
+                if (write_to_LCD[Encoder_count_neu])
+                {
+                    lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
+                    lcd.print("12 H2O  Entnahme");
+                    lcd.setCursor(1, 2); // Setz Curser auf Charakter 3, Zeile 2
+                    lcd.write(byte(CURSOR));
+
+                    write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+                } // end if (erstmalig)
+
+                // Wasserentnahme beginnt ---------------------------------------
+                if (!digitalRead(I_O_PIN))
+                {
+                    on_off_encoder = false; // Encoder Interrupt ausschalten
+
+                    digitalWrite(relais[RELAIS_WP], EIN); // Relais Gipsmotor [ARM Position] einschalten
+
+                    while (digitalRead(I_O_PIN)) // warten bis I/O Taste  losgelasen
+                    {
+                        delay(ENTPRELL_ZEIT);
+                    } // Relais halten bis I/O Taste losgelassen
+
+                    digitalWrite(relais[RELAIS_WP], AUS); // Relais Gipsmotor [ARM Position] ausschalten
+
+                    on_off_encoder = true; // Encoder Interrupt einschalten
+
+                    for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++) // 0 - 11, 12 Positionen
+                    {
+                        write_to_LCD[i] = true; // // LCD Grundanzeige wieder herstellen
+                    } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+                    // LCD wird auf jeden Fall wieder beschrieben
+                    write_to_LCD[11] = false; // damit immer nur einmalig auf den LCD geschrieben wird
+                   
+                    Encoder_count_neu = 11;   //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 11
+                } // end  if (!digitalRead(I_O_PIN))
+
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-                break;                            //  end case 11
+
+                break; //  end case 11, (POS 12 - Wasserentnahme)
 
             default:
 

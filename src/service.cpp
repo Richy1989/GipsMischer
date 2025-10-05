@@ -706,7 +706,7 @@ void service()
 								strcpy(daten[i].ueberschrift, "UEBERSCHRIFT1"); // Initialisierung der Überschrift - 13 Caraktere
 
 								for (int j = 0; j < (MAX_GEWICHTANZAHL - 1); j++) // 0 bis 9 Gewichte pro Arm (10 Gewichte)
-									daten[i].gewicht[j] = 0;
+									daten[i].gewicht[j] = 1;			 // Initialisierung der Gewichte in g, nicht 0 wegen Division
 
 								// Vorfixierte Gewichte in g
 								if (i == 1) // Bei ARM mitte

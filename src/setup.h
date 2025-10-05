@@ -217,6 +217,8 @@
 
 // Maximal messbares Gewicht in Gramm
 #define MAX_GEWICHT 3000
+// Minimal einzugebendes Gewicht in Gramm (Division durch 10 im Encoder)
+#define MIN_GEWICHT_EINGABE 1
 // Maximal einzugebendes Gewicht in Gramm
 #define MAX_GEWICHT_EINGABE 2000
 
@@ -303,6 +305,7 @@ extern bool abbruch;
 // Zahlenwert im Encoder
 extern  int Encoder_count_neu;
 extern  int Encoder_count_alt;
+extern int Encoder_count_store;
 
 // definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
 extern  int max_counter;
