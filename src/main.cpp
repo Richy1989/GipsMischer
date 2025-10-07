@@ -145,36 +145,33 @@ void setup()
 	// init_data();
 	// daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
 
-	lcd.createChar(SMILEY, smiley); // erstelltes Zeichen smiley
-	lcd.createChar(HERZ, herz);		// erstelltes Zeichen herz
-	lcd.createChar(CURSOR, cursor); // erstelltes Zeichen cursor
+	lcd.createChar(SMILEY, smiley);	    // erstelltes Zeichen Smiley
+	lcd.createChar(HERZ, herz);		    // erstelltes Zeichen Herz
+	lcd.createChar(CURSOR, cursor);	    // erstelltes Zeichen Cursor
+	lcd.createChar(RECHTECK, rechteck); // erstelltes Zeichen Rechteck
 
 	// Liest die Datenstruktur aus dem EEPROM
 	EEPROM.get(0, daten); // Lesen ab der Adresse 0 aus dem EEPROM
 						  // und speichern der Daten in der Variablen Daten (Datenstruktur)
 
+	// WAAGE KALIBRIERUNGSDATEN AUS DEM EEPROM LESEN
 	// Liest die EEPROM Adresse und speichert die Daten in der Variable Korrekturfaktor
 	// Adresse: anzahl_daten + EEPROM_ADRESSABSTAND
 	EEPROM.get(anzahl_daten + EEPROM_ADRESSABSTAND, Korrekturfaktor);
 
+	// WAAGE KALIBRIERUNGSDATEN AUS DEM EEPROM LESEN
 	// Liest die EEPROM Adresse und speichert die Daten in der Variable Leergew_einheiten
 	// Adresse: anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND
 	EEPROM.get(anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND, Leergew_einheiten);
 
-	for (size_t i = 0; i < MAX_DATEN_SATZ; i++)
-	{
-	//	gesamtgewicht[i] = daten[i].gewicht[0] + daten[i].gewicht[1];  // Gesamtgewicht Gips und Wasser																				  //  Mischungsverhältnisse (in Prozent. als 0,xxx Zahl) = Teilgewicht / Gesamtgewicht
-	//	gipsverhaeltnis[i] = daten[i].gewicht[0] / gesamtgewicht[i];   // Mischungsverhältnisse Gips
-		
-	wasserverhaeltnis[i] = 1 + (daten[i].gewicht[1] /  daten[i].gewicht[0]); // Wasser Referenzgewicht  /  Gips Referenzgewicht
-    // Wassergewicht[i] = Gipsgewicht[i] * wasserverhaeltnis[i]
-	}
+	// Gips- Wassserverhältnis berechnen und abspeichern
+	for (int i = 0; i < MAX_DATEN_SATZ; i++)									// für jeden Datensatz, 0 bis 2 also 3 Datensätze
+		gips_zu_h2o_verhaeltnis[i] = daten[i].gewicht[0] / daten[i].gewicht[1]; // Gips Referenzgewicht  /  Wasser Referenzgewicht
 
 } // end setup **********************************************************************
 
 void loop()
 {
-mainprogramm();
-
+	mainprogramm();
 
 } // end void loop() **********************************************************************

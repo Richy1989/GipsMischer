@@ -1,9 +1,7 @@
 #pragma once
 
-
 //  Auf den Laptop Bildschirm schreiben:
 //	Serial.println("ABBRUCH 2");   ///////////////////////////
-
 
 /******************************************
  *      INCLUDE DEFINITIONEN  Anfang        *
@@ -168,24 +166,23 @@
 #define ARM_RECHTS 2
 #define ARM_NO_POS 3
 
-#define ARM_ANZAHL 3  //  0 bis 2, also 3 Arm-Positionen
+#define ARM_ANZAHL 3 //  0 bis 2, also 3 Arm-Positionen
 
 #define BECHER_LINKS 0
 #define BECHER_MITTE 1
 #define BECHER_RECHTS 2
 #define NO_BECHER 3
 
-
 #define EDIT_LCD_CURSOR_SART 3 // Startposition des Cursors bei der Texteingabe im LCD
 #define EDIT_LCD_CURSOR_MAX 15 // Endposition des Cursors bei der Texteingabe im LCD (13 Charakters)
 
 #define EDIT_CHAR_CURSOR_SART 0 // Startposition des Cursors bei der Texteingabe im LCD
-#define LCD_CHARACTER_OFFSET 3 // Offset der LCD Character Position zum String Index Überschriften (0 - 12)
+#define LCD_CHARACTER_OFFSET 3	// Offset der LCD Character Position zum String Index Überschriften (0 - 12)
 
 // für die Variable daten vom Typ Datensatz
 #define MAX_DATEN_SATZ 3 // 0 bis 2, also 3 Datensätze, die in den EEPROM gespeichert werden
 // pro Datensatz jeweils einer Armposition zugeordnet
-#define MAX_STRING 13 // 0 bis 12, also 13 Charakters in der Überschrift 
+#define MAX_STRING 13		 // 0 bis 12, also 13 Charakters in der Überschrift
 #define MAX_GEWICHTANZAHL 10 // 0 bis 9, also 10 Gewichte
 
 // für die Variable daten vom Typ Datensatz
@@ -196,7 +193,7 @@
 // Pos 3 bis 6: (4x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g GIPSfix"
 //                                                        Fixes Gipsgewicht, jeweils pro Zeile um 160 / 130 g erhöht
 // Pos 7 bis 10: (4x) in der zweiten Zeile (scrollen)  --> LCD Anzeige: "-- xxx g GIPSein"
-//                                                        freie Eingabe Gipsgewicht 
+//                                                        freie Eingabe Gipsgewicht
 // Position 11 - LCD Anzeige: "-- Gipsenteerung"
 // Position 12 - LCD Anzeige: "-- H2O Entnahme "
 // Die Anzeige der Positionen am LCD erfolgt numerisch zweistellig über die ersten beiden
@@ -210,9 +207,9 @@
 #define FAST_INCREMENT 10
 
 // Arduino Mega hat 4 KB (4096 bytes) EEPROM Zellen, also 0 bis 4095
-#define MAX_EEPROM_ADRESSE 4095 
+#define MAX_EEPROM_ADRESSE 4095
 
-// Sicherheitsabstand der einzellnen Adressen beim Schreiben auf den EEPROM 
+// Sicherheitsabstand der einzellnen Adressen beim Schreiben auf den EEPROM
 #define EEPROM_ADRESSABSTAND 100 //  Abstand in Byts der Adressen der zu speichernden Variablen im EEPROM
 
 // Maximal messbares Gewicht in Gramm
@@ -223,48 +220,48 @@
 #define MAX_GEWICHT_EINGABE 2000
 
 // Wartezeit in ms
-#define WAIT_TIME_LED  750  // LED Hell- und Dunkelzeit beim service blinken 
-#define WAIT_TIME_2   3000  // ersten 3 Sekunden anzeige
-#define WAIT_TIME_3   5000  // zweiten 2 Sekunden anzeige
-#define WAIT_TIME_4   8000  // dritten 3 Sekunden anzeige 
-#define ENTPRELL_ZEIT    4  // Tastaturentprellzeit in ms
-#define WAAGE_READY_TIME 1000  // Wartezeit bis die Waage bereit ist in ms
+#define WAIT_TIME_LED 750	  // LED Hell- und Dunkelzeit beim service blinken
+#define WAIT_TIME_2 3000	  // ersten 3 Sekunden anzeige
+#define WAIT_TIME_3 5000	  // zweiten 2 Sekunden anzeige
+#define WAIT_TIME_4 8000	  // dritten 3 Sekunden anzeige
+#define ENTPRELL_ZEIT 4		  // Tastaturentprellzeit in ms
+#define WAAGE_READY_TIME 3000 // Wartezeit bis die Waage bereit ist in ms
 
 // Benennung der Service Test Routinen
-#define EEPROM_TEST 		0
-#define LED_TEST 			1
-#define BECHER_TEST			2
-#define TON_TEST 			3
-#define ARM_TEST		 	4
-#define WAAGE_KALIBRIERUNG 	5
-#define WAAGE_TEST 			6
-#define RELAIS_TEST			7
-#define DATA_RESET		    8
-#define OUT_OF_RANGE	    255 // Wert außerhalb des Bereichs der Test Routinen
+#define EEPROM_TEST 0
+#define LED_TEST 1
+#define BECHER_TEST 2
+#define TON_TEST 3
+#define ARM_TEST 4
+#define WAAGE_KALIBRIERUNG 5
+#define WAAGE_TEST 6
+#define RELAIS_TEST 7
+#define DATA_RESET 8
+#define OUT_OF_RANGE 255 // Wert außerhalb des Bereichs der Test Routinen
 
 // Benennung der Melodien
-#define MELODIE_ANFANG		0
-#define MELODIE_ENDE		1
-#define MELODIE_OK			2
-#define MELODIE_ENTER		3
-#define MELODIE_FEHLER		4
+#define MELODIE_ANFANG 0
+#define MELODIE_ENDE 1
+#define MELODIE_OK 2
+#define MELODIE_ENTER 3
+#define MELODIE_FEHLER 4
 
 // Sonderzeichen definierem
-#define SMILEY				0
-#define HERZ				1
-#define CURSOR				2
+#define SMILEY 0
+#define HERZ 1
+#define CURSOR 2
+#define RECHTECK 3
 
 // Vordefinierte Gips FIX Gewichte
-#define FIXGEWICHT_01	    130
-#define FIXGEWICHT_02       260
-#define FIXGEWICHT_03       390 
-#define FIXGEWICHT_04       520
+#define FIXGEWICHT_01 130
+#define FIXGEWICHT_02 260
+#define FIXGEWICHT_03 390
+#define FIXGEWICHT_04 520
 // Reserve Fixgewichte
-#define FIXGEWICHT_11	    160
-#define FIXGEWICHT_12       320
-#define FIXGEWICHT_13       480 
-#define FIXGEWICHT_14       640
-
+#define FIXGEWICHT_11 160
+#define FIXGEWICHT_12 320
+#define FIXGEWICHT_13 480
+#define FIXGEWICHT_14 640
 
 /******************************************
  *      KONSTANTEN DEFINITIONEN  Ende      *
@@ -286,8 +283,10 @@ extern float Leergew_einheiten;
 extern float Eichgew_einheiten;
 extern float Gewicht;
 extern float Gewicht_alt;
-extern float Teilgewicht;
-extern float Gesamtgewicht;
+extern float teilgewicht_gips;
+extern float teilgewicht_h2o;
+extern float gesamtgewicht;
+extern float eigengewicht;
 extern float Korrekturfaktor;
 
 extern unsigned int armposition;
@@ -303,13 +302,13 @@ extern bool on_off_encoder;
 extern bool abbruch;
 
 // Zahlenwert im Encoder
-extern  int Encoder_count_neu;
-extern  int Encoder_count_alt;
+extern int Encoder_count_neu;
+extern int Encoder_count_alt;
 extern int Encoder_count_store;
 
 // definition des Encoder ausgabewertes Minimum und Maximum in der Variablen counter
-extern  int max_counter;
-extern  int min_counter;
+extern int max_counter;
+extern int min_counter;
 
 // definition der Encoder Zeitabständen in Mikrosekunden
 extern unsigned long _lastIncReadTime;
@@ -324,12 +323,12 @@ extern const unsigned int relais[];
 extern const unsigned int anzahlrelais;
 
 extern unsigned long start_time;
-extern	unsigned long wait_time; //  Wartezeit in Millisekunden
+extern unsigned long wait_time; //  Wartezeit in Millisekunden
 
-	// Array für die Test Routinen
-//extern const int test_routinen[]; 
-	// berechnet die Anzahl der test_routinen
-//extern const int anzahl_tests;
+// Array für die Test Routinen
+// extern const int test_routinen[];
+//  berechnet die Anzahl der test_routinen
+// extern const int anzahl_tests;
 
 extern const unsigned int positiveTones[]; // Positive Töne
 extern const unsigned int negativeTones[]; // Negative Töne
@@ -342,33 +341,32 @@ extern const unsigned int test_routinen[];
 extern const unsigned int anzahl_tests;
 
 //  Array mit Zeichen für die Texteingabe (Großbuchstaben, Zahlen, Sonderzeichen)
-extern const char texteingabe[]; 
+extern const char texteingabe[];
 // berechnet die Anzahl der Characters der Texteingabe
 extern const unsigned int anzahl_texteingabe;
 
 // Structure Definition
-struct datensatz    
-{						 
-//	String ueberschrift; // 13 Charakters (0 bis 12) pro Armposition
-	char ueberschrift[MAX_STRING]; // 13 Charakters (0 bis 12) pro Armposition
+struct datensatz
+{
+	//	String ueberschrift; // 13 Charakters (0 bis 12) pro Armposition
+	char ueberschrift[MAX_STRING];			 // 13 Charakters (0 bis 12) pro Armposition
 	unsigned int gewicht[MAX_GEWICHTANZAHL]; // Array von 10 Gewichten (0 bis 9), für die Gewichte pro Armposition
 }; // Structure variable
 
 // Array of structures (0 bis 2) also 3 für die Armpositionen
-extern datensatz daten[MAX_DATEN_SATZ]; 
+extern datensatz daten[MAX_DATEN_SATZ];
 // berechnet die Anzahl der Byts der Variablen daten
 extern const unsigned int anzahl_daten;
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
-//extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-extern unsigned long wasserverhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
-//extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
+// extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
+extern unsigned long gips_zu_h2o_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+// extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
-extern byte smiley[8];  //erstellt Zeichen Smiley
-extern byte herz[8];  //erstellt Zeichen herz
-extern byte cursor[8];  //erstellt Zeichen cursor
-
-
+extern byte smiley[8];	 // erstellt Zeichen Smiley
+extern byte herz[8];	 // erstellt Zeichen Herz
+extern byte cursor[8];	 // erstellt Zeichen Cursor
+extern byte rechteck[8]; // erstellt Zeichen Rechteck
 
 /******************************************
  *      VARIABLEN DEFINITIONEN  Ende        *

@@ -13,8 +13,10 @@ float Leergew_einheiten;
 float Eichgew_einheiten;
 float Gewicht;
 float Gewicht_alt;
-float Teilgewicht;
-float Gesamtgewicht;
+float teilgewicht_gips;
+float teilgewicht_h2o;
+float gesamtgewicht;
+float eigengewicht;
 float Korrekturfaktor;
 
 // Zahlenwert im Encoder
@@ -50,7 +52,7 @@ const unsigned int relais[] = {
 	RELAIS_ML, RELAIS_MM, RELAIS_MR, // Motoren Relais     00, 01, 02
 	RELAIS_RL, RELAIS_RM, RELAIS_RR, // Rüttler Relais     03, 04, 05
 	RELAIS_VL, RELAIS_VM, RELAIS_VR, // Ventile Relais     06, 07, 08
-	RELAIS_WP						 // Wasserpumpe Relais 09 
+	RELAIS_WP						 // Wasserpumpe Relais 09
 };
 
 //  Berechnet die Anzahl der Relais;
@@ -151,21 +153,20 @@ void init_data()
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 //  unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-unsigned long wasserverhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+unsigned long gips_zu_h2o_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
 
 byte smiley[8] = {
-	// erstellt Zeichen Smiley
+	// erstellt Zeichen Smiley --> Nr.: 0
 	B00000,
 	B10001,
 	B00000,
 	B00000,
 	B10001,
 	B01110,
-	B00000,
-};
+	B00000};
 
-byte herz[8] = { // erstellt Zeichen Herz
+byte herz[8] = { // erstellt Zeichen Herz --> Nr.: 1
 	B00000,
 	B01010,
 	B11111,
@@ -175,7 +176,7 @@ byte herz[8] = { // erstellt Zeichen Herz
 	B00000,
 	B00000};
 
-byte cursor[8] = { // erstellt Zeichen Cursor
+byte cursor[8] = { // erstellt Zeichen Cursor --> Nr.: 2
 	B10000,
 	B11000,
 	B11100,
@@ -184,3 +185,13 @@ byte cursor[8] = { // erstellt Zeichen Cursor
 	B11100,
 	B11000,
 	B10000};
+
+byte rechteck[8] = { // erstellt Zeichen Rechteck --> Nr.: 3
+	B11111,
+	B10001,
+	B10001,
+	B10001,
+	B10001,
+	B10001,
+	B10001,
+	B11111};
