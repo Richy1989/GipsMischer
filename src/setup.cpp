@@ -16,7 +16,8 @@ float Gewicht_alt;
 float teilgewicht_gips;
 float teilgewicht_h2o;
 float gesamtgewicht;
-float eigengewicht;
+float gewicht_waagschale;
+float teilgewicht_gips_waggschale;
 float Korrekturfaktor;
 
 // Zahlenwert im Encoder

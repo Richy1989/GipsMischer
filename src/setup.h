@@ -286,7 +286,8 @@ extern float Gewicht_alt;
 extern float teilgewicht_gips;
 extern float teilgewicht_h2o;
 extern float gesamtgewicht;
-extern float eigengewicht;
+extern float gewicht_waagschale;
+extern float teilgewicht_gips_waggschale;
 extern float Korrekturfaktor;
 
 extern unsigned int armposition;
