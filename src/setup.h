@@ -245,6 +245,7 @@
 #define MELODIE_OK 2
 #define MELODIE_ENTER 3
 #define MELODIE_FEHLER 4
+#define MELODIE_SMOKE_ON_THE_WATER 5
 
 // Sonderzeichen definierem
 #define SMILEY 0
@@ -262,6 +263,12 @@
 #define FIXGEWICHT_12 320
 #define FIXGEWICHT_13 480
 #define FIXGEWICHT_14 640
+
+// Steuerung der Tastenerkennung
+#define SCAN 0
+#define WAIT 1
+#define TASTE_KOMPLETT 2
+
 
 /******************************************
  *      KONSTANTEN DEFINITIONEN  Ende      *

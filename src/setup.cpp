@@ -60,8 +60,8 @@ const unsigned int relais[] = {
 //  Relais = Anzahl Byts der Variablen relais geteilt durch die Bytegröße eines Arrayelements
 const unsigned int anzahlrelais = sizeof(relais) / sizeof(relais[0]); // Anzahl der Relais berechnet
 
-const unsigned int positiveTones[] = {1000, 1200, 1400, 1600}; // Positive Töne
-const unsigned int negativeTones[] = {500, 300, 200};		   // Negative Töne
+//const unsigned int positiveTones[] = {1000, 1200, 1400, 1600}; // Positive Töne
+//const unsigned int negativeTones[] = {500, 300, 200};		   // Negative Töne
 
 unsigned long start_time;
 
@@ -142,15 +142,15 @@ datensatz daten[MAX_DATEN_SATZ] = {};
 // berechnet die Anzahl der Byts der Variablen daten, zur Berechnung der EEPROM Speicheradressen
 const unsigned int anzahl_daten = sizeof(daten); //  Bytegröße der Variablen daten 13+22 = 35*3 = 105 Byts)
 
-void init_data()
-{
+//void init_data()
+//{
 	/* daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
 	 daten[0].gewicht[0] = 0;  	    	// Beispiel Initialisierung der Gewichte
 	 daten[0].gewicht[1] = 0;
 	 ..........
 	 daten[0].gewicht[10] = 0;
 	 */
-}
+//}
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 //  unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)

@@ -20,57 +20,175 @@ void read_armposition()
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/
 
+void smoke_on_the_water()
+{
+	// Smoke on the Water - tempo-basiert (Arduino/C++)
+	// BPM erhöhen/senken, um das Tempo zu ändern (z. B. BPM = 100 oder 140)
+	// Default BPM ist 120 
+	const int BPM = 100;			 // Tempo in BPM
+	const int BEAT_MS = 60000 / BPM; // ms pro Beat
+
+	struct Note
+	{
+		uint16_t freq; // Frequenz in Hz, 0 = Pause
+		float beats;   // Dauer in Beats
+	};
+
+	// Melodie: Bar 1, Bar 2, Bar 3, basierend auf deinen Originalzeiten gedrillt auf BPM=120
+	const Note melody[] = {
+		// Bar 1
+		{196, 0.8f},
+		{0, 1.0f},
+		{233, 0.8f},
+		{0, 1.0f},
+		{261, 1.6f},
+		{0, 2.0f},
+		// Bar 2
+		{196, 0.8f},
+		{0, 1.0f},
+		{233, 0.8f},
+		{0, 1.4f},
+		{277, 0.8f},
+		{0, 1.0f},
+		{261, 0.8f},
+		{0, 2.0f},
+		// Bar 3
+		{196, 0.8f},
+		{0, 1.0f},
+		{233, 0.8f},
+		{0, 1.0f},
+		{261, 0.8f},
+		{0, 1.0f},
+		{233, 0.8f},
+		{0, 1.0f},
+		{196, 1.6f},
+		{0, 2.0f}};
+
+	const int MELODY_LEN = sizeof(melody) / sizeof(melody[0]);
+
+	// void playMelody() {
+	for (int i = 0; i < MELODY_LEN; ++i)
+	{
+		int durationMs = (int)(melody[i].beats * BEAT_MS);
+		if (melody[i].freq > 0)
+		{
+			tone(TONE_PIN, melody[i].freq, durationMs);
+		}
+		else
+		{
+			noTone(TONE_PIN);
+		}
+		delay(durationMs);
+	}
+	noTone(TONE_PIN);
+} // Ende smoke_on_the_water()
+
 /*************************   Anfang  Spielt eine Melodie 	****************************/
 void Musik(int Melodie)
 {
 	switch (Melodie)
 	{
 	case MELODIE_ANFANG:
-		tone(TONE_PIN, 523); // C5 (Do)
-		delay(300);
-		tone(TONE_PIN, 784); // G5 (Sol)
-		delay(200);
+		tone(TONE_PIN, 440, 120); // A4
+		delay(150);
+		tone(TONE_PIN, 523, 120); // C5
+		delay(150);
+		tone(TONE_PIN, 659, 120); // E5
+		delay(150);
+		tone(TONE_PIN, 784, 200); // G5 – Signal: "Bereit!"
+		delay(250);
 		noTone(TONE_PIN);
-		delay(400);
 		break;
 
 	case MELODIE_ENDE:
-		tone(TONE_PIN, 392); // G4 (Sol)
-		delay(300);
-		tone(TONE_PIN, 587); // D5 (Re)
+		tone(TONE_PIN, 659, 150); // E5
 		delay(200);
-		noTone(TONE_PIN);
+		tone(TONE_PIN, 784, 150); // G5
+		delay(200);
+		tone(TONE_PIN, 880, 150); // A5
+		delay(200);
+		tone(TONE_PIN, 988, 300); // B5
 		delay(400);
+		tone(TONE_PIN, 1046, 500); // C6 – Abschluss
+		delay(600);
+		noTone(TONE_PIN);
 		break;
 
 	case MELODIE_OK:
-		tone(TONE_PIN, 440); // A4 (La)
-		delay(300);
-		tone(TONE_PIN, 660); // E5 (Höhe)
+		tone(TONE_PIN, 523, 150); // C5
 		delay(200);
-		noTone(TONE_PIN);
+		tone(TONE_PIN, 659, 150); // E5
+		delay(200);
+		tone(TONE_PIN, 784, 150); // G5
+		delay(200);
+		tone(TONE_PIN, 1046, 300); // C6 (hoher Abschluss)
 		delay(400);
+		noTone(TONE_PIN);
 		break;
 
 	case MELODIE_ENTER:
-		tone(TONE_PIN, 659); // E5 (Mi)
-		delay(300);
-		tone(TONE_PIN, 880); // A5 (La)
-		delay(200);
+		tone(TONE_PIN, 523, 120); // C5
+		delay(150);
+		tone(TONE_PIN, 659, 120); // E5
+		delay(150);
+		tone(TONE_PIN, 784, 120); // G5
+		delay(150);
+		tone(TONE_PIN, 880, 200); // A5 – fröhlicher Abschluss
+		delay(250);
 		noTone(TONE_PIN);
-		delay(400);
 		break;
 
 	case MELODIE_FEHLER:
-		tone(TONE_PIN, 330); // E4 (Mi)
-		delay(300);
-		tone(TONE_PIN, 440); // A4 (La)
+		tone(TONE_PIN, 784, 150); // G5
 		delay(200);
-		noTone(TONE_PIN);
+		tone(TONE_PIN, 659, 150); // E5
+		delay(200);
+		tone(TONE_PIN, 523, 300); // C5
 		delay(400);
+		noTone(TONE_PIN);
+		break;
+
+	case MELODIE_SMOKE_ON_THE_WATER:
+		// Frequenzen in Hz für die Noten
+		// Smoke on the water
+		/*		tone(TONE_PIN, 196, 400); // G
+				delay(500);
+				tone(TONE_PIN, 233, 400); // Bb
+				delay(500);
+				tone(TONE_PIN, 261, 800); // C
+				delay(1000);
+				// bis hierher 2700 ms
+
+				tone(TONE_PIN, 196, 400); // G
+				delay(500);
+				tone(TONE_PIN, 233, 400); // Bb
+				delay(700);
+				tone(TONE_PIN, 277, 400); // Db
+				delay(500);
+				tone(TONE_PIN, 261, 400); // C
+				delay(1000);
+				// bis hierher 3600 ms, zusammen 6300 ms
+
+				tone(TONE_PIN, 196, 400); // G
+				delay(500);
+				tone(TONE_PIN, 233, 400); // Bb
+				delay(500);
+				tone(TONE_PIN, 261, 400); // C
+				delay(500);
+				tone(TONE_PIN, 233, 400); // Bb
+				delay(500);
+				tone(TONE_PIN, 196, 800); // G
+				delay(1000);
+				noTone(TONE_PIN);
+
+				// bis hierher 4400 ms, zusammen 10700 ms
+
+				*/
+		smoke_on_the_water(); // neue Version der Melodie
 		break;
 
 	default:
+		// do nothing
 		break;
 
 	} // end switch (Melodie)
@@ -706,7 +824,7 @@ void service()
 								strcpy(daten[i].ueberschrift, "UEBERSCHRIFT1"); // Initialisierung der Überschrift - 13 Caraktere
 
 								for (int j = 0; j < (MAX_GEWICHTANZAHL - 1); j++) // 0 bis 9 Gewichte pro Arm (10 Gewichte)
-									daten[i].gewicht[j] = 1;			 // Initialisierung der Gewichte in g, nicht 0 wegen Division
+									daten[i].gewicht[j] = 1;					  // Initialisierung der Gewichte in g, nicht 0 wegen Division
 
 								// Vorfixierte Gewichte in g
 								if (i == 1) // Bei ARM mitte
@@ -715,14 +833,14 @@ void service()
 									daten[i].gewicht[3] = FIXGEWICHT_02;
 									daten[i].gewicht[4] = FIXGEWICHT_03;
 									daten[i].gewicht[5] = FIXGEWICHT_04;
-								}//  end if (i == 1)
+								} //  end if (i == 1)
 								else
 								{ // Bei ARM links und rechts
 									daten[i].gewicht[2] = FIXGEWICHT_11;
 									daten[i].gewicht[3] = FIXGEWICHT_12;
 									daten[i].gewicht[4] = FIXGEWICHT_13;
 									daten[i].gewicht[5] = FIXGEWICHT_14;
-								}  // end else if (i == 1)
+								} // end else if (i == 1)
 							} // end for (int i = 0; i < ARM_ANZAHL; i++)
 
 							// Datenspeicherung im EEPROM:

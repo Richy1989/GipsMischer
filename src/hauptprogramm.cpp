@@ -1,31 +1,101 @@
 #include "hauptprogramm.h"
 
+///////////////////////////////////// Begin press_key  ///////////////////////////////////////////
+// wartet bis eine Taste gedrückt wird (Prellzeit wird berücksichtigt)
+boolean press_key(unsigned int taste, boolean scan)
+{
+    switch (scan)
+    {
+    case SCAN:                   // scaned die Taste einmalig (low ist gedrückt, high ist losgelassen)
+        if (!digitalRead(taste)) // ist die Taste low, gedrückt
+        {
+            delay(ENTPRELL_ZEIT); // Entprellzeit
+            if (!digitalRead(taste))
+                return (true); // Taste ist low, gedrückt
+        } // end if (digitalRead(taste))
+
+        return (false); // Taste ist high, losgelassen
+        break;          // end  case SCAN
+
+    case WAIT:                     // scaned die Taste bis die Taste gedrückt wird (low ist gedrückt, high ist losgelassen)
+        while (digitalRead(taste)) // so lange die Taste high, losgelassen ist
+        {                          // warten bis "Taste" low, gedrückt wird
+        }
+        delay(ENTPRELL_ZEIT); // Entprellzeit
+        return (true);        // Taste ist gedrückt
+        break;                // end  case WAIT
+
+    case TASTE_KOMPLETT:            // ?????????????  // scaned die Taste bis die Taste gedrückt wird (low ist gedrückt, high ist losgelassen)
+        if (press_key(taste, SCAN)) // ist die Taste low, gedrückt
+        {
+            press_key(taste, WAIT);
+            return (true); // Taste ist losgelassen (ein kompletter Tastebdruck ist absolviert, high-->low-->high)
+        }
+
+        return (false); // Taste ist high, losgelassen KEIN kompletter Tastebdruck
+        break;
+
+    default:
+        break;
+    }  // end switch (scan)
+} //  end press_key()
+///////////////////////////////////// Ende press_key  ///////////////////////////////////////////
+
+///////////////////////////////////// Begin release_key  ///////////////////////////////////////////
+// wartet bis eine Taste losgelassen wird  (Prellzeit wird berücksichtigt)
+boolean release_key(unsigned int taste, boolean scan)
+{
+    if (scan == SCAN)
+    {
+        if (digitalRead(taste)) // ist die Taste high, losgelassen
+        {
+            delay(ENTPRELL_ZEIT);   // Entprellzeit
+            if (digitalRead(taste)) // ist die Taste losgelassen
+                return (true);      // Taste ist losgelassen
+        } // end if (digitalRead(taste))
+        else                // taste ist low, gedrückt
+            return (false); // Taste ist gedrückt
+    } // end if (scan == SCAN)
+
+    while (!digitalRead(taste)) // so lange die Taste low, gedrückt ist
+    {                           // warten bis "Taste" high, losgelasen wird
+    }
+    delay(ENTPRELL_ZEIT); // Entprellzeit
+    return (true);        // Taste ist high, losgelassen
+} //  end release_key()
+///////////////////////////////////// Ende release_key  ///////////////////////////////////////////
+
 ///////////////////////////////////// Anfang Begrüßugng auf dem LCD  ///////////////////////////////////////////
 //  Begrüßung auf dem LCD Display
 //  und Entscheidung ob nicht offizielle Service Routine oder das Hauptprogramm gestartet wird
 
 void greeting()
 {
-    return;
 
     start_time = millis(); // Startzeit für Begrüßung setzen
 
     do
     {
+        press_key(ENTER_PIN, SCAN);
         //  Wenn Taste ENTER und I/O Taste gleichzeitig gedrückt ist, also low
         //  wird die Service Routine aufgerufen
         //  (Enter Taste ist die linke Taste auf der Bedieneinheit)
         //  (I/O Taste ist die rechte Taste auf der Bedieneinheit)
-        if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
+        if (press_key(ENTER_PIN, SCAN) && press_key(I_O_PIN, SCAN))
         {
             service(); // Aufruf der Service Routine
 
-            while (!digitalRead(I_O_PIN)) // warten bis I/O Taste losgelasen wenn vom Servoce zurück
-            {
-            } // end while (!digitalRead(I_O_PIN))
+            release_key(I_O_PIN, WAIT);  // Da Serviceroutine mit I/O abgebrochen wird
 
             start_time = millis(); // Startzeit für Begrüßung setzen
         } // end if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
+
+        if (press_key(WAAGE_PIN, SCAN))
+        {
+            release_key(WAAGE_PIN, WAIT);
+            Musik(MELODIE_SMOKE_ON_THE_WATER);
+            break; // Begrüßung beenden und ins Hauptprogramm wechseln
+        } // end if (!digitalRead(WAAGE_PIN))
 
         // Laufschrift zur Begrüßung:
         // *   Zahntechnik   * *     powered    *  *    Richard     *
@@ -92,7 +162,6 @@ void LCD_fortschtitt(float max, float teil)
 //////////////////////////////////////// Beginn mainprogramm ///////////////////////////////////////////
 void mainprogramm()
 {
-    bool waage_aktiv = false;                     // zum ein- und ausschalten der Wägefunktion
     int LCD_cursor_position;                      // Curserposition auf dem LCD (3 bis 16)
     bool write_to_LCD[MAX_CURSOR_POSITIONEN + 1]; // 0 bis 11, 12 Positionen, damit immer nur einmalig auf den LCD geschrieben wird
 
@@ -119,9 +188,67 @@ void mainprogramm()
 
     do
     {
-        // Armposition ermitteln ------------------------------
-        //   read_armposition();
+        // Begin WAAGE FUNKTION     Taste Waage wurde gedrückt -----------------------------------
+        // Armposition spielt in dieser Funktion keine Rolle
+        if (press_key(WAAGE_PIN, SCAN)) //  Waagefunktion
+        {
+            release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
+            lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+            lcd.print(" Waagefunktion  ");
+            lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 1
+            lcd.print("Gewicht:       g");
+
+            Gewicht_alt = OUT_OF_RANGE;                                                         // Gewicht_alt auf 0 setzen, damit Gewicht angezeigt wird
+            gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessene Grundgewicht
+
+            do
+            {
+                // Differenz der Gewichtseinheit minus der Leereinheitdurch,
+                // Dividiert Korrekturfaktor
+                Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+
+                if (Gewicht != Gewicht_alt) // Anzeigen des Gewichtes nur wenn es sich geändert hat
+                {
+                    Gewicht_alt = Gewicht; // Gewicht_alt aktualisieren
+                    lcd.setCursor(9, 1);   // Setze Cursor auf die 8. Stelle der 2. Zeile
+                    lcd.print("     ");    // Clear previous value
+                    lcd.setCursor(9, 1);
+
+                    int mom_Gewicht = (int)(Gewicht - gewicht_waagschale);
+
+                    if (Gewicht > MAX_GEWICHT) // Maximalgewicht (inklusive gewicht_waagschale) überschritten
+                        lcd.print("ERROR ");   // Fehleranzeige
+                    else
+                    {
+                        if (mom_Gewicht == -1)
+                            mom_Gewicht = 0; // Tolleranzbereich -1g bis 0g, damit Aneige um den 0 Punkt stabil bleibt
+
+                        lcd.print(mom_Gewicht); // Gewicht anzeigen
+                    } //  end  if (Gewicht > MAX_GEWICHT)
+
+                } // end if (Gewicht != Gewicht_alt)
+
+            } while (!press_key(WAAGE_PIN, SCAN)); // warten bis Taste Waage wieder gedrückt wird
+
+            release_key(WAAGE_PIN, WAIT); //  Warten bis WAAGE Taste losgelasen wird
+
+            // einstieg in Hauptschleife herstellen
+            min_counter = 0;                     // Minimalwert für Encoder
+            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+            Encoder_count_neu = min_counter;  // Start mit Zeile 0 (Überschrift)
+            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+            Encoder_count_store = OUT_OF_RANGE;
+
+            on_off_encoder = true; // Encoder Interrupt einschalten
+                                   //   armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+        } // end if (press_key(WAAGE_PIN, SCAN))
+        // Ende WAAGE FUNKTION     Taste Waage wurde wiederum gedrückt -----------------------------------
+
+        // ANFANG Armposition ermitteln -----------------------------------------
+        //   read_armposition();
         if (armposition == ARM_NO_POS)
         {
             //  alle LED ausschalten
@@ -185,68 +312,7 @@ void mainprogramm()
                 armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
             } // end if (armposition_alt != armposition)
         } // end else...if (armposition == ARM_NO_POS)
-
-        // Taste Waage wurde gedrückt -----------------------------------
-        if (!digitalRead(WAAGE_PIN)) //  Wägefunktion
-        {
-            //           delay(ENTPRELL_ZEIT); // Entprellzeit
-            while (!digitalRead(WAAGE_PIN))
-            { // warten bis Taste ENTER losgelasen wird
-            } //  end while (digitalRead(ENTER_PIN))
-            delay(ENTPRELL_ZEIT); // Entprellzeit
-
-            lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-            lcd.print(" Waagefunktion  ");
-            lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 1
-            lcd.print("Gewicht:       g");
-
-            Gewicht_alt = 0;                                                                    // Gewicht_alt auf 0 setzen, damit Gewicht angezeigt wird
-            gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessene Grundgewicht
-
-            do
-            {
-                // Differenz der Gewichtseinheit minus der Leereinheitdurch,
-                // Dividiert Korrekturfaktor
-                Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
-
-                if (Gewicht != Gewicht_alt) // Anzeigen des Gewichtes nur wenn es sich geändert hat
-                {
-                    Gewicht_alt = Gewicht; // Gewicht_alt aktualisieren
-                    lcd.setCursor(9, 1);   // Setze Cursor auf die 8. Stelle der 2. Zeile
-                    lcd.print("     ");    // Clear previous value
-                    lcd.setCursor(9, 1);
-
-                    int mom_Gewicht = (int)(Gewicht - gewicht_waagschale);
-
-                    if (mom_Gewicht == -1)
-                        mom_Gewicht = 0; // Tolleranzbereich -1g bis 0g
-
-                    if (Gewicht > MAX_GEWICHT) // Maximalgewicht überschritten
-                        lcd.print("ERROR ");   // Maximalgewicht überschritten
-                    else
-                        lcd.print(mom_Gewicht); // Gewicht anzeigen
-                } // end if (Gewicht != Gewicht_alt)
-
-            } while (digitalRead(WAAGE_PIN)); // warten bis Taste Waage wieder gedrückt wird
-
-            //           delay(ENTPRELL_ZEIT); // Entprellzeit
-            while (!digitalRead(WAAGE_PIN))
-            { // warten bis Taste ENTER losgelasen wird
-            } //  end while (digitalRead(ENTER_PIN))
-            delay(ENTPRELL_ZEIT); // Entprellzeit
-
-            // einstieg in Hauptschleife herstellen
-            min_counter = 0;                     // Minimalwert für Encoder
-            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
-
-            Encoder_count_neu = min_counter;  // Start mit Zeile 0 (Überschrift)
-            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-            Encoder_count_store = OUT_OF_RANGE;
-
-            on_off_encoder = true; // Encoder Interrupt einschalten
-                                   //   armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-
-        } // end if (!digitalRead(WAAGE_PIN) && !waaage_aktiv)
+          // ENDE Armposition ermitteln ------------------------------
 
         // Hauptmenü ------------------------------------------------
         if (Encoder_count_neu != Encoder_count_alt)
@@ -286,13 +352,9 @@ void mainprogramm()
                 } // end if (erstmalig)
 
                 // wenn ENTER Taste gedrückt, beginnt editieren des Strigs Überschrift
-                if (!digitalRead(ENTER_PIN))
+                if (press_key(ENTER_PIN, SCAN)) //  wenn ENTER Taste gedrückt wird
                 {
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(ENTER_PIN))
-                    { // warten bis Taste ENTER losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                     min_counter = EDIT_CHAR_CURSOR_SART; // Minimalwert für Encoder 0
                     max_counter = anzahl_texteingabe;    // Maximalwert für Encoder (0 bis 39, also 40 Positionen)
@@ -305,6 +367,18 @@ void mainprogramm()
 
                     do
                     {
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            Encoder_count_neu = 0;            // Verbleib im Manü case 0, (POS1 Überschrift)
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        }
+
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
                             Encoder_count_alt = Encoder_count_neu;
@@ -316,13 +390,10 @@ void mainprogramm()
                         } // end if (Encoder_count_neu != Encoder_count_alt)
 
                         // wenn ENTER Taste gedrückt ein Charakter nach Rechts zum editieren
-                        if (!digitalRead(ENTER_PIN))
+
+                        if (press_key(ENTER_PIN, SCAN)) //  wenn ENTER Taste gedrückt wird
                         {
-                            delay(4 * ENTPRELL_ZEIT); // Entprellzeit
-                            while (!digitalRead(ENTER_PIN))
-                            { // warten bis Taste ENTER losgelasen wird
-                            } //  end while (!digitalRead(ENTER_PIN))
-                            delay(4 * ENTPRELL_ZEIT); // Entprellzeit
+                            release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                             lcd.noBlink(); // Cursor blinken ausschalten
 
@@ -354,7 +425,7 @@ void mainprogramm()
                 if (write_to_LCD[Encoder_count_neu])
                 {
                     lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-                    lcd.print("   ");    // POS 01 anzeige löschen
+                    lcd.print("01");     // POS 01 anzeige löschen
 
                     lcd.setCursor(2, 0); // Setz Curser auf Charakter 3, Zeile 1
                     lcd.write(" ");      //  Löschen des alten Cursors in Zeile 1
@@ -376,13 +447,9 @@ void mainprogramm()
                     write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
                 } // end if (erstmalig)
 
-                if (!digitalRead(ENTER_PIN))
+                if (press_key(ENTER_PIN, SCAN)) //  wenn ENTER Taste gedrückt wird
                 {
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(ENTER_PIN))
-                    { // warten bis Taste ENTER losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                     min_counter = MIN_GEWICHT_EINGABE; // Minimalwert für Encoder 1 (Division durch 0 vermeiden)
                     max_counter = MAX_GEWICHT_EINGABE; // Maximalwert für Encoder (Gewicht 2000 g)
@@ -393,6 +460,19 @@ void mainprogramm()
 
                     do
                     { // editiereb der Referenzmenge Gipsgewicht  -------------------------------
+
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            Encoder_count_neu = 1;            // Verbleib im Manü case 1, (POS 02 - Referenz Gipsgewicht und Wassergewicht)
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        }
+
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
                             Encoder_count_alt = Encoder_count_neu;
@@ -404,15 +484,11 @@ void mainprogramm()
 
                             lcd.blink();
                         } // end if (Encoder_count_neu != Encoder_count_alt)
-                    } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
+                    } while (!press_key(ENTER_PIN, SCAN)); // Ende der Eingabe mit ENTER Taste
+
+                    release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                     lcd.noBlink(); // Cursor blinken ausschalten
-
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(ENTER_PIN))
-                    { // warten bis Taste ENTER losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
 
                     //  Referenzmenge  Gipsgewicht in die Datenstruktur schreiben
                     daten[armposition].gewicht[0] = Encoder_count_neu;
@@ -422,6 +498,19 @@ void mainprogramm()
 
                     do
                     { // editiereb der Referenzmenge Wassermenge -------------------------------
+
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            Encoder_count_neu = 1;            // Verbleib im Manü case 1, (POS 02 - Referenz Gipsgewicht und Wassergewicht)
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        }
+
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
                             Encoder_count_alt = Encoder_count_neu;
@@ -432,15 +521,11 @@ void mainprogramm()
                             lcd.print(Encoder_count_neu); //  Referenzmenge Wasser in g
                             lcd.blink();
                         } // end if (Encoder_count_neu != Encoder_count_alt)
-                    } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
+                    } while (!press_key(ENTER_PIN, SCAN)); // Ende der Eingabe mit ENTER Taste
+
+                    release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                     lcd.noBlink(); // Cursor blinken ausschalten
-
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(ENTER_PIN))
-                    { // warten bis Taste ENTER losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
 
                     //  Referenzmenge  Wassermenge in die Datenstruktur schreiben
                     daten[armposition].gewicht[1] = Encoder_count_neu;
@@ -467,6 +552,12 @@ void mainprogramm()
             case 5: /*  POS 06 - Gipsgewicht fix immer um 160/130 g erhöht ==> 640 g / 520g  */
                 if (write_to_LCD[Encoder_count_neu])
                 {
+                    if (Encoder_count_neu == 2) // Cursor der Überschrift löschen
+                    {
+                        lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
+                        lcd.print("   ");    // POS 01 anzeige löschen
+                    }
+
                     lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
                     lcd.print("0      g fixiert");
                     lcd.setCursor(1, 1);              // Setz Curser auf Charakter 2, Zeile 2
@@ -479,13 +570,9 @@ void mainprogramm()
 
                 // Gips Abfüllung beginnt ---------------------------------------
 
-                if (!digitalRead(I_O_PIN))
+                if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(I_O_PIN))
-                    { // warten bis Taste I/O  losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
 
                     start_time = millis();
 
@@ -523,6 +610,18 @@ void mainprogramm()
 
                     do // Gips Abfüllung
                     {
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+
                         // Differenz der Gewichtseinheit minus der Leereinheitdurch,
                         // Dividiert Korrekturfaktor
                         Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
@@ -540,6 +639,18 @@ void mainprogramm()
 
                     do // H2O Abfüllung
                     {
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+
                         // Differenz der Gewichtseinheit minus der Leereinheitdurch,
                         // Dividiert Korrekturfaktor
                         Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
@@ -590,13 +701,9 @@ void mainprogramm()
 
                 // Gipsmenge editieren beginnt ---------------------------------------
                 // "Encoder_count_neu" muss im "Encoder_count_store" zwischengespeichert werden
-                if (!digitalRead(ENTER_PIN))
+                if (press_key(ENTER_PIN, SCAN)) //  wenn ENTER Taste gedrückt wird
                 {
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(ENTER_PIN))
-                    { // warten bis Taste ENTER losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                     Encoder_count_store = Encoder_count_neu; // Zwischenspeicherung der Position
 
@@ -609,6 +716,18 @@ void mainprogramm()
 
                     do
                     { // editieren der Referenzmenge Gipsgewicht  -------------------------------
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
                             Encoder_count_alt = Encoder_count_neu;
@@ -620,15 +739,10 @@ void mainprogramm()
 
                             lcd.blink();
                         } // end if (Encoder_count_neu != Encoder_count_alt)
-                    } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
+                        //     } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
+                    } while (press_key(ENTER_PIN, SCAN)); // Ende der Eingabe mit ENTER Taste
 
                     lcd.noBlink(); // Cursor blinken ausschalten
-
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(ENTER_PIN))
-                    { // warten bis Taste ENTER losgelasen wird
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
 
                     // Gipsgewicht  wurden editiert, daher Datenspeicherung im EEPROM:
                     daten[armposition].gewicht[Encoder_count_store] = Encoder_count_neu;
@@ -644,13 +758,9 @@ void mainprogramm()
                 } // end if (!digitalRead(ENTER_PIN))   //   ENDE des editieren der Referenzmenge Gipsgewicht
 
                 // Gips- / Wasser-Abfüllung beginnt ---------------------------------------
-                if (!digitalRead(I_O_PIN))
+                if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
-                    while (!digitalRead(I_O_PIN))
-                    { // warten bis Taste I/O  losgelasen wird
-                    } //  end while (digitalRead(I_O_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
 
                     start_time = millis();
 
@@ -700,14 +810,23 @@ void mainprogramm()
                     Serial.print("Teilgewicht H2O ");      ///////////////////////////
                     Serial.println(teilgewicht_h2o);       ///////////////////////////
 
-                    // warten bis Taste Enter gedrückt wird, also low wird, dann weiter
-                    while (digitalRead(ENTER_PIN))
-                        delay(100 * ENTPRELL_ZEIT); // Entprellzeit//  end while (digitalRead(ENTER_PIN))
-
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    // NUR WEGEN ANZEIGE: warten bis Taste Enter gedrückt wird, also low wird, dann weiter
+                    press_key(ENTER_PIN, WAIT);
 
                     do // Gips Abfüllung
                     {
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+
                         // Differenz der Gewichtseinheit minus der Leereinheitdurch,
                         // Dividiert Korrekturfaktor
                         // Abzüglich des Eigengewicht der Waagscghale
@@ -734,15 +853,23 @@ void mainprogramm()
                     Serial.print("Teilgewicht H2O ");  ///////////////////////////
                     Serial.println(teilgewicht_h2o);   ///////////////////////////
 
-                    // warten bis Taste Enter gedrückt wird, also low wird, dann weiter
-                    while (digitalRead(ENTER_PIN))
-                    {
-                        delay(ENTPRELL_ZEIT); // Entprellzeit
-                    } //  end while (digitalRead(ENTER_PIN))
-                    delay(ENTPRELL_ZEIT); // Entprellzeit
+                    // NUR WEGEN ANZEIGE: warten bis Taste Enter gedrückt wird, also low wird, dann weiter
+                    press_key(ENTER_PIN, WAIT);
 
                     do // H2O Abfüllung
                     {
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+
                         // Differenz der Gewichtseinheit minus der Leereinheitdurch,
                         // Dividiert Korrekturfaktor
                         // Abzüglich des Eigengewicht der Waagscghale
@@ -778,16 +905,27 @@ void mainprogramm()
                 } // end if (erstmalig)
 
                 // Gipsentleerrn beginnt ---------------------------------------
-                if (!digitalRead(I_O_PIN))
+                if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
                     on_off_encoder = false; // Encoder Interrupt ausschalten
 
                     digitalWrite(relais[armposition], EIN); // Relais Gipsmotor[ARM Position] einschalten
 
-                    while (!digitalRead(I_O_PIN)) // warten bis I/O taste losgelasen
+                    do
                     {
-                        delay(ENTPRELL_ZEIT);
-                    } // Relais halten bis I/O Taste losgelassen
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+
+                    } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
 
                     digitalWrite(relais[armposition], AUS); // Relais Gipsmotor [ARM Position] ausschalten
 
@@ -813,16 +951,26 @@ void mainprogramm()
                 } // end if (erstmalig)
 
                 // Wasserentnahme beginnt ---------------------------------------
-                if (!digitalRead(I_O_PIN))
+                if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
                     on_off_encoder = false; // Encoder Interrupt ausschalten
 
                     digitalWrite(RELAIS_WP, EIN); // Relais Wasserpumpe einschalten
 
-                    while (!digitalRead(I_O_PIN)) // warten bis I/O Taste  losgelasen
+                    do
                     {
-                        delay(ENTPRELL_ZEIT);
-                    } // Relais halten bis I/O Taste losgelassen
+                        //  read_armposition();
+                        if (armposition != armposition_alt)
+                        {
+                            min_counter = 0;                     // Minimalwert für Encoder
+                            max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
+
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; // Abbruch wenn Armposition sich geändert hat
+                        } // end if (armposition != armposition_alt)
+                    } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
 
                     digitalWrite(RELAIS_WP, AUS); // Relais Wasserpumpe ausschalten
 
