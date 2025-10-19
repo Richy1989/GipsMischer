@@ -1,8 +1,12 @@
 #include "service.h"
 
-// *********   Armpositionen einlesen und in Variable armposition speichern, negative Logik 	***************
+// *********  Armpositionen einlesen und in Variable armposition speichern, negative Logik ******
 void read_armposition()
 {
+	// NUR ZUM SOFTWARETESTEN, SPÄTER ENTFERNEN
+	armposition = ARM_LINKS;
+	return;
+
 	if (!digitalRead(AL)) // Negative Logik (LOW = aktiv)
 		armposition = ARM_LINKS;
 	else
@@ -20,11 +24,36 @@ void read_armposition()
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/
 
+/****************************    Anfang read_becher() 	********************************/
+// *********  Becher einlesen und in Array becher speichern, negative Logik *****
+void read_becher()
+{
+	// NUR ZUM SOFTWARETESTEN, SPÄTER ENTFERNEN
+	becher[0] = BECHER_OK;
+	return;
+
+	for (unsigned int i = 0; i < BECHER_ANZAHL; i++)  // 0 bis 2, also 3 Becher
+	{
+		becher[i] = NO_BECHER;
+
+		if (!digitalRead(BL)) // Negative Logik (LOW = aktiv)
+			becher[i] = BECHER_OK;
+
+		if (!digitalRead(BM)) // Negative Logik (LOW = aktiv)
+			becher[i] = BECHER_OK;
+
+		if (!digitalRead(BR)) // Negative Logik (LOW = aktiv)
+			becher[i] = BECHER_OK;
+	} // end for (unsigned int i = 0; i < BECHER_ANZAHL; i++)
+} //  end read_becher()
+/****************************    Ende read_becher() 	********************************/
+
+/****************************    Anfang smoke_on_the_water() 	********************************/
 void smoke_on_the_water()
 {
 	// Smoke on the Water - tempo-basiert (Arduino/C++)
 	// BPM erhöhen/senken, um das Tempo zu ändern (z. B. BPM = 100 oder 140)
-	// Default BPM ist 120 
+	// Default BPM ist 120
 	const int BPM = 100;			 // Tempo in BPM
 	const int BEAT_MS = 60000 / BPM; // ms pro Beat
 
@@ -82,6 +111,7 @@ void smoke_on_the_water()
 	}
 	noTone(TONE_PIN);
 } // Ende smoke_on_the_water()
+/****************************    Ende smoke_on_the_water() 	********************************/
 
 /*************************   Anfang  Spielt eine Melodie 	****************************/
 void Musik(int Melodie)

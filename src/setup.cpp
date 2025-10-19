@@ -142,20 +142,13 @@ datensatz daten[MAX_DATEN_SATZ] = {};
 // berechnet die Anzahl der Byts der Variablen daten, zur Berechnung der EEPROM Speicheradressen
 const unsigned int anzahl_daten = sizeof(daten); //  Bytegröße der Variablen daten 13+22 = 35*3 = 105 Byts)
 
-//void init_data()
-//{
-	/* daten[0].ueberschrift = "Gips A";  // Beispiel Initialisierung der Überschrift
-	 daten[0].gewicht[0] = 0;  	    	// Beispiel Initialisierung der Gewichte
-	 daten[0].gewicht[1] = 0;
-	 ..........
-	 daten[0].gewicht[10] = 0;
-	 */
-//}
-
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 //  unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
 unsigned long gips_zu_h2o_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
+
+// Array of Becher (0 bis 2) also 3 für 
+unsigned int becher[BECHER_ANZAHL];
 
 byte smiley[8] = {
 	// erstellt Zeichen Smiley --> Nr.: 0

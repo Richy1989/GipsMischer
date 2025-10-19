@@ -168,10 +168,14 @@
 
 #define ARM_ANZAHL 3 //  0 bis 2, also 3 Arm-Positionen
 
+#define NO_BECHER 0
+#define BECHER_OK 1
+#define BECHER_ANZAHL 3 //  0 bis 2, also 3 Becher
+
 #define BECHER_LINKS 0
 #define BECHER_MITTE 1
 #define BECHER_RECHTS 2
-#define NO_BECHER 3
+
 
 #define EDIT_LCD_CURSOR_SART 3 // Startposition des Cursors bei der Texteingabe im LCD
 #define EDIT_LCD_CURSOR_MAX 15 // Endposition des Cursors bei der Texteingabe im LCD (13 Charakters)
@@ -226,6 +230,7 @@
 #define WAIT_TIME_4 8000	  // dritten 3 Sekunden anzeige
 #define ENTPRELL_ZEIT 4		  // Tastaturentprellzeit in ms
 #define WAAGE_READY_TIME 3000 // Wartezeit bis die Waage bereit ist in ms
+#define LCD_TIME 3000         // Fehler Anzeigezeit am LCD in ms
 
 // Benennung der Service Test Routinen
 #define EEPROM_TEST 0
@@ -323,7 +328,6 @@ extern unsigned long _lastIncReadTime;
 extern unsigned long _lastDecReadTime;
 extern unsigned long _pauseLength;
 
-//
 extern const unsigned int relais[];
 //  Array für die Relais Pins, die in der Reihenfolge der Relais angeordnet sind
 //  Relais 1 bis 9 sind Motoren, Rüttler und Ventile, Relais 10 ist die Wasserpumpe
@@ -332,11 +336,6 @@ extern const unsigned int anzahlrelais;
 
 extern unsigned long start_time;
 extern unsigned long wait_time; //  Wartezeit in Millisekunden
-
-// Array für die Test Routinen
-// extern const int test_routinen[];
-//  berechnet die Anzahl der test_routinen
-// extern const int anzahl_tests;
 
 extern const unsigned int positiveTones[]; // Positive Töne
 extern const unsigned int negativeTones[]; // Negative Töne
@@ -370,6 +369,9 @@ extern const unsigned int anzahl_daten;
 // extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
 extern unsigned long gips_zu_h2o_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
+
+// Array of Becher (0 bis 2) also 3 für 
+extern unsigned int becher[BECHER_ANZAHL];
 
 extern byte smiley[8];	 // erstellt Zeichen Smiley
 extern byte herz[8];	 // erstellt Zeichen Herz
