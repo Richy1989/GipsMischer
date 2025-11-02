@@ -3,7 +3,7 @@
 // *********  Armpositionen einlesen und in Variable armposition speichern, negative Logik ******
 void read_armposition()
 {
-	// NUR ZUM SOFTWARETESTEN, SPÄTER ENTFERNEN
+	// NUR ZUM SOFTWARETESTEN, SPÄTER ENTFERNEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	armposition = ARM_LINKS;
 	return;
 
@@ -32,7 +32,7 @@ void read_becher()
 	becher[0] = BECHER_OK;
 	return;
 
-	for (unsigned int i = 0; i < BECHER_ANZAHL; i++)  // 0 bis 2, also 3 Becher
+	for (unsigned int i = 0; i < BECHER_ANZAHL; i++) // 0 bis 2, also 3 Becher
 	{
 		becher[i] = NO_BECHER;
 
@@ -244,6 +244,7 @@ void service()
 {
 	// Variablen für "Bechererkennung" auf LCD Schreiberkennung
 	bool bl_LCD_NO, bm_LCD_NO, br_LCD_NO, bl_LCD_OK, bm_LCD_OK, br_LCD_OK;
+	int LED_pointer; // LED Adressierung
 
 	lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
 	lcd.print("    SERVICE     "); // Text in zweiter Zeile anzeigen
@@ -325,47 +326,50 @@ void service()
 
 				break; //  end case EEPROM_TEST
 
-			case LED_TEST:					   /*  IMMER NUR EIN Programm DURCHLAUF  */
-				lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
-				lcd.print("LED TEST    :I/O"); // Text in erster Zeile anzeigen
-				lcd.setCursor(0, 1);		   // Setz Curser auf Charakter 1, Zeile 2
-				lcd.print("LED blinken: ");	   // Text in zweiter Zeile anzeigen
+			case LED_TEST:						/*  IMMER NUR EIN Programm DURCHLAUF  */
+				lcd.setCursor(0, 0);			// Setz Curser auf Charakter 1, Zeile 1
+				lcd.print("LED TEST    :I/O");	// Text in erster Zeile anzeigen
+				lcd.setCursor(0, 1);			// Setz Curser auf Charakter 1, Zeile 2
+				lcd.print("blink:           "); // Text in zweiter Zeile anzeigen
+				LED_pointer = 0;
 
 				do
-				{
-					lcd.setCursor(13, 1); // Setz Curser auf Charakter 14, Zeile 2
-					lcd.print("AUS");
+				{							   // WAIT_TIME_LED wiederholt den do Schleifen durchlaufen
+					start_time_LED = millis(); //  neu Startzeit für LED Blinkzeit setzen
 
 					digitalWrite(LL, AUS);
 					digitalWrite(LM, AUS);
 					digitalWrite(LR, AUS);
 
-					start_time = millis();
-
-					while (Encoder_count_neu == Encoder_count_alt &&  // logische UND
-						   (millis() - start_time < WAIT_TIME_LED) && // 750 ms Sekunden warten
-						   digitalRead(I_O_PIN))					  // solange I/O Taste nicht gedrückt ist, also high ist
+					switch (LED_pointer)
 					{
-					} // warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist oder I/O Taste gedrückt ist
+					case 0:
+						digitalWrite(LL, EIN); // LED links einschalten
+						lcd.setCursor(7, 1);   // Setz Curser auf Charakter 8, Zeile 2
+						lcd.print("LED Links");
+						LED_pointer = 1;
+						break;
+					case 1:
+						digitalWrite(LM, EIN); // LED mitte einschalten
+						lcd.setCursor(7, 1);   // Setz Curser auf Charakter 8, Zeile 2
+						lcd.print("LED Mitte");
+						LED_pointer = 2;
+						break;
+					case 2:
+						digitalWrite(LR, EIN); // LED rechts einschalten
+						lcd.setCursor(7, 1);   // Setz Curser auf Charakter 8, Zeile 2
+						lcd.print("LED Recht");
+						LED_pointer = 0;
+						break;
+					default:
+						break;
+					} // end switch (LED_pointer)
 
-					if (digitalRead(I_O_PIN))
-					{
-						lcd.setCursor(13, 1); // Setz Curser auf Charakter 14, Zeile 2
-						lcd.print("EIN");
-						digitalWrite(LL, EIN);
-						digitalWrite(LM, EIN);
-						digitalWrite(LR, EIN);
-
-						start_time = millis();
-
-						while (Encoder_count_neu == Encoder_count_alt &&  // logisches UND
-							   (millis() - start_time < WAIT_TIME_LED) && // 750 ms Sekunden warten
-							   digitalRead(I_O_PIN))					  // solange I/O Taste nicht gedrückt ist, also high ist
-						{
-
-						} // warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist oder I/O Taste gedrückt ist
-
-					} // end if (digitalRead(I_O_PIN))
+					do
+					{														// warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist oder I/O Taste gedrückt ist
+					} while ((Encoder_count_neu == Encoder_count_alt) &&	// logische UND
+							 (start_time_LED + WAIT_TIME_LED > millis()) && // 750 ms Sekunden
+							 (digitalRead(I_O_PIN)));
 
 					if (!digitalRead(I_O_PIN))
 						return; // Bedinerabbruch, Servicemenü verlassen

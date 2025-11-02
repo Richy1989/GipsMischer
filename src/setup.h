@@ -225,6 +225,8 @@
 
 // Wartezeit in ms
 #define WAIT_TIME_LED 750	  // LED Hell- und Dunkelzeit beim service blinken
+#define WAIT_TIME_LED_II 333  // LED Alarmblinkzeit bei keiner definierten Armposition
+#define WAIT_TIME_ARM_ALARM 3000 // nach dieser Zeit erfolgt ein akustischer Fehleralarm bei keiner definierten Armposition
 #define WAIT_TIME_2 3000	  // ersten 3 Sekunden anzeige
 #define WAIT_TIME_3 5000	  // zweiten 2 Sekunden anzeige
 #define WAIT_TIME_4 8000	  // dritten 3 Sekunden anzeige
@@ -335,12 +337,8 @@ extern const unsigned int relais[];
 extern const unsigned int anzahlrelais;
 
 extern unsigned long start_time;
-extern unsigned long wait_time; //  Wartezeit in Millisekunden
-
-extern const unsigned int positiveTones[]; // Positive Töne
-extern const unsigned int negativeTones[]; // Negative Töne
-
-extern unsigned int start;
+extern unsigned long start_time_LED; 	//  LED Blinkzeit
+extern unsigned long start_time_armpos; //  Zeit zu Alarm für falsche Armposition
 
 //  Array für die Test Routinen
 extern const unsigned int test_routinen[];

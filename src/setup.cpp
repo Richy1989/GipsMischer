@@ -6,9 +6,6 @@ LiquidCrystal lcd(RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7); // LCD Initialisi
 unsigned int Anzeige_alt = 255;
 unsigned int Anzeige;
 
-bool leer = false;
-bool voll = false;
-
 float Leergew_einheiten;
 float Eichgew_einheiten;
 float Gewicht;
@@ -36,13 +33,13 @@ unsigned int armposition_alt;
 // steuerung des Encoder Interrupts. Nur wenn der Encoder in Funktion sein soll
 bool on_off_encoder = false;
 
-// zum Abbruch einet Funktion
+// zum Abbruch einer Funktion
 bool abbruch = false;
 
 // definition der Encoder Zeitabständen in Mikrosekunden
 unsigned long _lastIncReadTime = micros();
 unsigned long _lastDecReadTime = micros();
-unsigned long _pauseLength = 25000;
+unsigned long _pauseLength = 25000;  // 25 ms Pause zwischen den Encoder Impulsen
 
 //  Array für die Adressierung der RelaisPins auf dem Arduino Mega2560
 //  Motor Links (A8), Motor Mitte (A7), Motor Rechts (A6)
@@ -60,10 +57,10 @@ const unsigned int relais[] = {
 //  Relais = Anzahl Byts der Variablen relais geteilt durch die Bytegröße eines Arrayelements
 const unsigned int anzahlrelais = sizeof(relais) / sizeof(relais[0]); // Anzahl der Relais berechnet
 
-//const unsigned int positiveTones[] = {1000, 1200, 1400, 1600}; // Positive Töne
-//const unsigned int negativeTones[] = {500, 300, 200};		   // Negative Töne
-
 unsigned long start_time;
+unsigned long start_time_LED;		//  LED Blinkzeit
+unsigned long start_time_armpos;    //  Zeit zu Alarm für falsche Armposition
+
 
 // Array für die Test Routinen
 const unsigned int test_routinen[] = {EEPROM_TEST, LED_TEST, BECHER_TEST,
