@@ -145,9 +145,9 @@ void setup()
 	// init_data();
 	// daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
 
-	lcd.createChar(SMILEY, smiley);	    // erstelltes Zeichen Smiley
-	lcd.createChar(HERZ, herz);		    // erstelltes Zeichen Herz
-	lcd.createChar(CURSOR, cursor);	    // erstelltes Zeichen Cursor
+	lcd.createChar(SMILEY, smiley);		// erstelltes Zeichen Smiley
+	lcd.createChar(HERZ, herz);			// erstelltes Zeichen Herz
+	lcd.createChar(CURSOR, cursor);		// erstelltes Zeichen Cursor
 	lcd.createChar(RECHTECK, rechteck); // erstelltes Zeichen Rechteck
 
 	// Liest die Datenstruktur aus dem EEPROM
@@ -164,9 +164,13 @@ void setup()
 	// Adresse: anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND
 	EEPROM.get(anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND, Leergew_einheiten);
 
-	// Gips- Wassserverhältnis berechnen und abspeichern
-	for (int i = 0; i < MAX_DATEN_SATZ; i++)									// für jeden Datensatz, 0 bis 2 also 3 Datensätze
-		gips_zu_h2o_verhaeltnis[i] = daten[i].gewicht[0] / daten[i].gewicht[1]; // Gips Referenzgewicht  /  Wasser Referenzgewicht
+	// Gipsverhältnis berechnen und abspeichern
+	for (int i = 0; i < MAX_DATEN_SATZ; i++) // für jeden Datensatz, 0 bis 2 also 3 Datensätze
+		gips_verhaeltnis[i] =
+			(daten[i].gewicht[0] + daten[i].gewicht[1]) //  Gips Referenzgewicht + Wasser Referenzgewicht
+			/											//  dividiert durch
+			daten[i].gewicht[0]							//  Gips Referenzgewicht
+			;											//  Ergebnis ist Mischungsverhältnis Gips zu Gesamtmenge in Prozent
 
 } // end setup **********************************************************************
 

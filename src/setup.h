@@ -301,7 +301,7 @@ extern float teilgewicht_gips;
 extern float teilgewicht_h2o;
 extern float gesamtgewicht;
 extern float gewicht_waagschale;
-extern float teilgewicht_gips_waggschale;
+extern float teilgewicht_h2o_waagschale;
 extern float Korrekturfaktor;
 
 extern unsigned int armposition;
@@ -365,7 +365,7 @@ extern const unsigned int anzahl_daten;
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 // extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-extern unsigned long gips_zu_h2o_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+extern unsigned long gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
 // Array of Becher (0 bis 2) also 3 für 

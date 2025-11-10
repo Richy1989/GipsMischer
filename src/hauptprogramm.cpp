@@ -90,8 +90,8 @@ void greeting()
         if (press_key(WAAGE_PIN, SCAN))
         {
             release_key(WAAGE_PIN, WAIT);
-        //    Musik(MELODIE_SMOKE_ON_THE_WATER);
-           Musik(MELODIE_ANFANG);
+            //    Musik(MELODIE_SMOKE_ON_THE_WATER);
+            Musik(MELODIE_ANFANG);
             break; // Begrüßung beenden und ins Hauptprogramm wechseln
         } // end if (!digitalRead(WAAGE_PIN))
 
@@ -518,6 +518,8 @@ void mainprogramm()
                     min_counter = MIN_GEWICHT_EINGABE; // Minimalwert für Encoder 1 (Division durch 0 vermeiden)
                     max_counter = MAX_GEWICHT_EINGABE; // Maximalwert für Encoder (Gewicht 2000 g)
 
+                    // editieren der Referenzmenge Gips beginnt ---------------------------
+
                     //  Bestehendes Gipsgewicht in den Editor schreiben
                     Encoder_count_neu = daten[armposition].gewicht[0];
                     Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
@@ -557,11 +559,13 @@ void mainprogramm()
                     //  Referenzmenge  Gipsgewicht in die Datenstruktur schreiben
                     daten[armposition].gewicht[0] = Encoder_count_neu;
 
+                    // editieren der Referenzmenge Wasser beginnt ---------------------------
+
                     //  Bestehende Wassermenge in den Editor schreiben
                     Encoder_count_neu = daten[armposition].gewicht[1];
 
                     do
-                    { // editiereb der Referenzmenge Wassermenge -------------------------------
+                    { // editieren der Referenzmenge Wasser -------------------------------
 
                         read_armposition();
                         if (armposition != armposition_alt)
@@ -598,8 +602,12 @@ void mainprogramm()
                     EEPROM.put(0, daten);
                     // Schreiben der komletten Variablen (Datenstruktur) Daten auf den EEPROM, ab Adresse 0
 
-                    // Neue Gewichtverhältnisse berechnen, // Gips Referenzgewicht  /  Wasser Referenzgewicht
-                    gips_zu_h2o_verhaeltnis[armposition] = daten[armposition].gewicht[0] / daten[armposition].gewicht[0];
+                    // Gipsverhältnis berechnen und abspeichern
+                    gips_verhaeltnis[armposition] =
+                        (daten[armposition].gewicht[0] + daten[armposition].gewicht[1]) //  Gips Referenzgewicht + Wasser Referenzgewicht
+                        /                                                               //  dividiert durch
+                        daten[armposition].gewicht[0]                                   //  Gips Referenzgewicht
+                        ;                                                               //  Ergebnis ist Mischungsverhältnis Gips zu Gesamtmenge in Prozent
 
                     min_counter = 0;                     // Minimalwert für Encoder
                     max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
@@ -632,7 +640,7 @@ void mainprogramm()
                     write_to_LCD[Encoder_count_neu] = false; // damit immer nur einmalig auf den LCD geschrieben wird
                 } //  end if (erstmalig)
 
-                // Gips Abfüllung beginnt ---------------------------------------
+                // H2O Abfüllung beginnt ---------------------------------------
 
                 if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
@@ -661,23 +669,25 @@ void mainprogramm()
                             break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
                         } // end if (millis() - start_time < WAAGE_READY_TIME)
 
-                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessene Grundgewicht
-                        teilgewicht_gips = daten[armposition].gewicht[Encoder_count_neu];                   // eingegebenes Gipsgewicht
-                        teilgewicht_gips_waggschale = gewicht_waagschale + teilgewicht_gips;
-                        teilgewicht_h2o = teilgewicht_gips / gips_zu_h2o_verhaeltnis[armposition]; // berechnetes Wassergewicht
+                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;               // gemessene Grundgewicht
+                        teilgewicht_gips = daten[armposition].gewicht[Encoder_count_neu] / gips_verhaeltnis[armposition]; // berechnetes Gipsgewicht
+                        teilgewicht_h2o = daten[armposition].gewicht[Encoder_count_neu] - teilgewicht_gips;               // berechnetes Wassergewicht
+                        teilgewicht_h2o_waagschale = gewicht_waagschale + teilgewicht_h2o;
 
-                        gesamtgewicht =        // Gesamtgewicht =
+                        gesamtgewicht =        // zu messendes Gesamtgewicht =
                             gewicht_waagschale // Eigengewicht der Waagschale
-                            +
-                            teilgewicht_gips // Gipsgewicht
-                            +                // +
-                            teilgewicht_h2o  // Wassergewicht
-                            ;
+                            +                  // plus
+                            teilgewicht_gips   // Gipsgewicht
+                            +                  // plus
+                            teilgewicht_h2o    // Wassergewicht
+                            ;                  // Berechnung des zu messendes Gesamtgewicht
 
-                        digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
-                        digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
+                        //  H2O Abfüllung beginnt ---------------------------------------
 
-                        do // Gips Abfüllung
+                        digitalWrite(relais[armposition + 6], EIN); // Relais H2O-Ventil [ARM Position] einschalten
+                        digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
+
+                        do // H2O Abfüllung
                         {
                             read_armposition();
                             if (armposition != armposition_alt)
@@ -696,17 +706,17 @@ void mainprogramm()
                             Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
 
                             LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
-                        } while (Gewicht < teilgewicht_gips_waggschale); // Auf Gipsgewicht prüfen (inklusive Waagschalen Gewicht)
+                        } while (Gewicht < teilgewicht_h2o_waagschale); // Auf Wassergewicht prüfen (inklusive Waagschalen Gewicht)
 
-                        digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
-                        digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
+                        digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
+                        digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
 
-                        //  Wasser Abfüllung beginnt ---------------------------------------
+                        //  Gips Abfüllung beginnt ---------------------------------------
 
-                        digitalWrite(relais[armposition + 6], EIN); // Relais Ventil [ARM Position] einschalten
-                        digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
+                        digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
+                        digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
 
-                        do // H2O Abfüllung
+                        do // Gips Abfüllung
                         {
                             read_armposition();
                             if (armposition != armposition_alt)
@@ -730,8 +740,8 @@ void mainprogramm()
                             LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
                         } while (Gewicht < gesamtgewicht); // Auf Gipsgewicht + Wassergewicht prüfen
 
-                        digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
-                        digitalWrite(relais[armposition + 6], AUS); // Relais Ventil [ARM Position] ausschalten
+                        digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
+                        digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
 
                         Musik(MELODIE_OK);
                         //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
@@ -869,24 +879,25 @@ void mainprogramm()
                             break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
                         } // end if (millis() - start_time < WAAGE_READY_TIME)
 
-                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessene Grundgewicht
-                        teilgewicht_gips = daten[armposition].gewicht[Encoder_count_neu];                   // eingegebenes Gipsgewicht
-                        teilgewicht_gips_waggschale = gewicht_waagschale + teilgewicht_gips;
+                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;               // gemessene Grundgewicht
+                        teilgewicht_gips = daten[armposition].gewicht[Encoder_count_neu] / gips_verhaeltnis[armposition]; // berechnetes Gipsgewicht
+                        teilgewicht_h2o = daten[armposition].gewicht[Encoder_count_neu] - teilgewicht_gips;               // berechnetes Wassergewicht                                                                                                               // berechnetes Wassergewicht
+                        teilgewicht_h2o_waagschale = gewicht_waagschale + teilgewicht_h2o;
 
-                        teilgewicht_h2o = teilgewicht_gips / gips_zu_h2o_verhaeltnis[armposition]; // berechnetes Wassergewicht
-
-                        gesamtgewicht =        // Gesamtgewicht =
+                        gesamtgewicht =        // zu messendes Gesamtgewicht =
                             gewicht_waagschale // Eigengewicht der Waagschale
-                            +
-                            teilgewicht_gips // Gipsgewicht
-                            +                // +
-                            teilgewicht_h2o  // Wassergewicht
-                            ;
+                            +                  // plus
+                            teilgewicht_gips   // Gipsgewicht
+                            +                  // plus
+                            teilgewicht_h2o    // Wassergewicht
+                            ;                  // Berechnung des zu messendes Gesamtgewicht
 
-                        digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
-                        digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
+                        //  H2O Abfüllung beginnt ---------------------------------------
 
-                        do // Gips Abfüllung
+                        digitalWrite(relais[armposition + 6], EIN); // Relais H2O-Ventil [ARM Position] einschalten
+                        digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
+
+                        do // H2O Abfüllung
                         {
                             read_armposition();
                             if (armposition != armposition_alt)
@@ -906,17 +917,17 @@ void mainprogramm()
                             Gewicht = ((scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor); // Messung Gewicht Gips + Gewicht Waagschale
 
                             LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
-                        } while (Gewicht < teilgewicht_gips_waggschale); // Auf Gipsgewicht prüfen (inklusive Waagschalen Gewicht)
+                        } while (Gewicht < teilgewicht_h2o_waagschale); // Auf Gipsgewicht prüfen (inklusive Waagschalen Gewicht)
 
-                        digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
-                        digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
+                        digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
+                        digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
 
-                        //  Wasser Abfüllung beginnt ---------------------------------------
+                        //  Gips Abfüllung beginnt ---------------------------------------
 
-                        digitalWrite(relais[armposition + 6], EIN); // Relais Ventil [ARM Position] einschalten
-                        digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
+                        digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
+                        digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
 
-                        do // H2O Abfüllung
+                        do // Gips Abfüllung
                         {
                             read_armposition();
                             if (armposition != armposition_alt)
@@ -941,8 +952,8 @@ void mainprogramm()
                             LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
                         } while (Gewicht < gesamtgewicht); // Auf Gipsgewicht + Wassergewicht prüfen
 
-                        digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
-                        digitalWrite(relais[armposition + 6], AUS); // Relais Ventil [ARM Position] ausschalten
+                        digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
+                        digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
 
                         Musik(MELODIE_OK);
                         //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 6, 7, 8, 9
