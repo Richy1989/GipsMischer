@@ -711,6 +711,8 @@ void mainprogramm()
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
                         digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
 
+                         Musik(MELODIE_TON_1000);  // Kurzer Signalton zum Ende der Wasserabfüllung
+
                         //  Gips Abfüllung beginnt ---------------------------------------
 
                         digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
@@ -921,7 +923,9 @@ void mainprogramm()
 
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
                         digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
-
+                        
+                        Musik(MELODIE_TON_1000);  // Kurzer Signalton zum Ende der Wasserabfüllung
+                        
                         //  Gips Abfüllung beginnt ---------------------------------------
 
                         digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
