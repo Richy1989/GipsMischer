@@ -176,7 +176,6 @@
 #define BECHER_MITTE 1
 #define BECHER_RECHTS 2
 
-
 #define EDIT_LCD_CURSOR_SART 3 // Startposition des Cursors bei der Texteingabe im LCD
 #define EDIT_LCD_CURSOR_MAX 15 // Endposition des Cursors bei der Texteingabe im LCD (13 Charakters)
 
@@ -252,7 +251,8 @@
 #define MELODIE_OK 2
 #define MELODIE_ENTER 3
 #define MELODIE_FEHLER 4
-#define MELODIE_SMOKE_ON_THE_WATER 5
+#define MELODIE_TON_1000 5
+#define MELODIE_SMOKE_ON_THE_WATER 6
 
 // Sonderzeichen definierem
 #define SMILEY 0

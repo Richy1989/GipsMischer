@@ -178,6 +178,12 @@ void Musik(int Melodie)
 		noTone(TONE_PIN);
 		break;
 
+		case MELODIE_TON_1000:
+		tone(TONE_PIN, 1000, 200);  // 1000 Hz
+	//	delay(200);
+		noTone(TONE_PIN);
+		break;
+
 	case MELODIE_SMOKE_ON_THE_WATER:
 		// Frequenzen in Hz für die Noten
 		// Smoke on the water
@@ -853,12 +859,12 @@ void service()
 							lcd.print("warten programm");
 
 							//  erstmalige Dateneingabe initialisieren
-							for (int i = 0; i < ARM_ANZAHL; i++) // 0 bis 2 Arme (3 Arme)
+							for (int i = 0; i < ARM_ANZAHL; i++) // 0 bis 2 Arm (3 Arme)
 							{
 								strcpy(daten[i].ueberschrift, "UEBERSCHRIFT1"); // Initialisierung der Überschrift - 13 Caraktere
 
-								for (int j = 0; j < (MAX_GEWICHTANZAHL - 1); j++) // 0 bis 9 Gewichte pro Arm (10 Gewichte)
-									daten[i].gewicht[j] = 1;					  // Initialisierung der Gewichte in g, nicht 0 wegen Division
+								for (int j = 0; j < (MAX_GEWICHTANZAHL); j++)   // 0 bis 9 Gewichte pro Arm (10 Gewichte)
+									daten[i].gewicht[j] = 1;					// Initialisierung der Gewichte in g, nicht 0 wegen Division
 
 								// Vorfixierte Gewichte in g
 								if (i == 1) // Bei ARM mitte

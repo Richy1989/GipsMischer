@@ -124,6 +124,9 @@ void greeting()
             } // end else...if (delta_time < WAIT_TIME_4)
         } // end if (delta_time < WAIT_TIME_2)
     } while (millis() - start_time < WAIT_TIME_4);
+
+    Musik(MELODIE_ANFANG);
+
 } //  end greeting()
 ///////////////////////////////////// Ende Begrüßugng auf dem LCD  ///////////////////////////////////////////
 
@@ -711,7 +714,7 @@ void mainprogramm()
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
                         digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
 
-                         Musik(MELODIE_TON_1000);  // Kurzer Signalton zum Ende der Wasserabfüllung
+                        Musik(MELODIE_TON_1000); // Kurzer Signalton zum Ende der Wasserabfüllung
 
                         //  Gips Abfüllung beginnt ---------------------------------------
 
@@ -818,8 +821,9 @@ void mainprogramm()
                             min_counter = 0;                     // Minimalwert für Encoder
                             max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
 
-                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
-                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 6, 7, 8, 9
+                            Encoder_count_neu = Encoder_count_store; // Rückkehr zur ursprünglichen Position
+                            Encoder_count_alt = OUT_OF_RANGE;        // Erststartbedingung herstellen
 
                             break; // Abbruch wenn Armposition sich geändert hat
                         } // end if (armposition != armposition_alt)
@@ -835,8 +839,9 @@ void mainprogramm()
 
                             lcd.blink();
                         } // end if (Encoder_count_neu != Encoder_count_alt)
-                        //     } while (digitalRead(ENTER_PIN)); // Ende der Eingabe mit ENTER Taste
-                    } while (press_key(ENTER_PIN, SCAN)); // Ende der Eingabe mit ENTER Taste
+                    } while (!press_key(ENTER_PIN, SCAN)); // Ende der Eingabe mit ENTER Taste
+
+                    release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
                     lcd.noBlink(); // Cursor blinken ausschalten
 
@@ -853,7 +858,7 @@ void mainprogramm()
                     Encoder_count_neu = Encoder_count_store; // Rückkehr zur ursprünglichen Position
                 } // end if (!digitalRead(ENTER_PIN))   //   ENDE des editieren der Referenzmenge Gipsgewicht
 
-                // Gips- / Wasser-Abfüllung beginnt ---------------------------------------
+                // Gips- / Wasser-Abfüllung kann beginnen ---------------------------------------
                 if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
                     release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
@@ -923,9 +928,9 @@ void mainprogramm()
 
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
                         digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
-                        
-                        Musik(MELODIE_TON_1000);  // Kurzer Signalton zum Ende der Wasserabfüllung
-                        
+
+                        Musik(MELODIE_TON_1000); // Kurzer Signalton zum Ende der Wasserabfüllung
+
                         //  Gips Abfüllung beginnt ---------------------------------------
 
                         digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
