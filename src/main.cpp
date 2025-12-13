@@ -64,19 +64,21 @@ void read_encoder()
 
 void setup()
 {
-	Serial.begin(115200);
+	Serial.begin(115200);    // Kommunikation zum Laptop Bildschirm 
 
-	Serial.println("jetzt gehts los"); // Erkennung auf dem Laptop Bildschirm schreiben
+	Serial.println("jetzt gehts los"); // Text auf dem Laptop Bildschirm schreiben
+	
+delay(1000);
 
 	// Eingänge zur Armposition Erkennung:
-	pinMode(AL, INPUT_PULLUP); // Eingang Armposition LINKS
-	pinMode(AM, INPUT_PULLUP); // Eingang Armposition MITTE
-	pinMode(AR, INPUT_PULLUP); // Eingang Armposition RECHTS
+	pinMode(AL, INPUT_PULLUP); // Eingang Armposition LINKS, pullup
+	pinMode(AM, INPUT_PULLUP); // Eingang Armposition MITTE, pullup
+	pinMode(AR, INPUT_PULLUP); // Eingang Armposition RECHTS, pullup
 
 	// Eingänge zur Gipsbecher Erkennung:
-	pinMode(BL, INPUT_PULLUP); // Eingang Armposition LINKS, pullup
-	pinMode(BM, INPUT_PULLUP); // Eingang Armposition MITTE, pullup
-	pinMode(BR, INPUT_PULLUP); // Eingang Armposition RECHTS, pullup
+	pinMode(BL, INPUT_PULLUP); // Eingang Gips Becher LINKS, pullup
+	pinMode(BM, INPUT_PULLUP); // Eingang Gips Becher MITTE, pullup
+	pinMode(BR, INPUT_PULLUP); // Eingang Gips Becher RECHTS, pullup
 
 	// Ausgang zur Gipsbecher Erkennung:
 	pinMode(TONE_PIN, OUTPUT); // Ausgang zur Tone Erzeugung

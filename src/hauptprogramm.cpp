@@ -181,12 +181,8 @@ void mainprogramm()
     Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
     Encoder_count_store = OUT_OF_RANGE;
 
-    on_off_encoder = true;          // Encoder Interrupt einschalten
+    //  on_off_encoder = true;          // Encoder Interrupt einschalten
     armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-
-    // nur zum Test Armposition vorgeben ------------------------------
-    armposition = ARM_LINKS;
-    armposition_alt = ARM_LINKS;
 
     do
     {
@@ -195,6 +191,8 @@ void mainprogramm()
         if (press_key(WAAGE_PIN, SCAN)) //  Waagefunktion
         {
             release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
+
+            //           on_off_encoder = false;       // Encoder Interrupt ausschalten
 
             lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
             lcd.print(" Waagefunktion  ");
@@ -216,7 +214,7 @@ void mainprogramm()
                 delay(LCD_TIME); // Anzeige der Fehlermeldung
 
                 Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
-                //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                //  Encoder_count_neu bleibt unverändert, Verbleib im Menü case 0 bis 11
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                 break; //  Abbruch der Waagefunktion, zurück ins Hauptmenü
@@ -271,14 +269,14 @@ void mainprogramm()
             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
             Encoder_count_store = OUT_OF_RANGE;
 
-            on_off_encoder = true; // Encoder Interrupt einschalten
-                                   //   armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+            //         on_off_encoder = true; // Encoder Interrupt einschalten
+            // armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
         } // end if (press_key(WAAGE_PIN, SCAN))
         // Ende WAAGE FUNKTION     Taste Waage wurde wiederum gedrückt -----------------------------------
 
         // ANFANG Armposition ermitteln -----------------------------------------
-        read_armposition();
+        read_armposition(); // Armposition einlesen und in Variable armposition speichern
 
         if (armposition_alt != armposition)
         {
@@ -288,10 +286,12 @@ void mainprogramm()
                 digitalWrite(relais[i], AUS); // Relais ausschalten (negative Logik: Ausgang ist also high, wenn Relais AUS ist)
             }
 
-            //  alle LED ausschalten
-            digitalWrite(LL, AUS);
-            digitalWrite(LM, AUS);
-            digitalWrite(LR, AUS);
+            armposition_alt = armposition;
+
+            //  alle LED ausschalten - negative Logik
+            digitalWrite(LL, LED_AUS); // LED Links ausschalten - negative Logik
+            digitalWrite(LM, LED_AUS); // LED Mitte ausschalten - negative Logik
+            digitalWrite(LR, LED_AUS); // LED Rechts ausschalten - negative Logik
 
             if (armposition == ARM_NO_POS)
             {
@@ -306,25 +306,26 @@ void mainprogramm()
                 do // warten bis eine gültige Armposition erkannt wird
                 {
                     if (start_time_LED + WAIT_TIME_LED_II < millis())
-                    {                              //  LED Blinkanzeige (Lauflicht) für keine erkannte Armposition
+                    {                              //  LED Lauflicht für keine erkannte Armposition
                         start_time_LED = millis(); //  neu Startzeit für LED Blinkzeit setzen
 
-                        digitalWrite(LL, AUS);
-                        digitalWrite(LM, AUS);
-                        digitalWrite(LR, AUS);
+                        //  alle LED ausschalten - negative Logik
+                        digitalWrite(LL, LED_AUS); // LED Links ausschalten - negative Logik
+                        digitalWrite(LM, LED_AUS); // LED Mitte ausschalten - negative Logik
+                        digitalWrite(LR, LED_AUS); // LED Rechts ausschalten - negative Logik
 
                         switch (LED_pointer)
                         {
                         case 0:
-                            digitalWrite(LL, EIN); // LED links einschalten
+                            digitalWrite(LL, LED_EIN); // LED Links einschalten - negative Logik
                             LED_pointer = 1;
                             break;
                         case 1:
-                            digitalWrite(LM, EIN); // LED mitte einschalten
+                            digitalWrite(LM, LED_EIN); // LED Mitte einschalten - negative Logik
                             LED_pointer = 2;
                             break;
                         case 2:
-                            digitalWrite(LR, EIN); // LED rechts einschalten
+                            digitalWrite(LR, LED_EIN); // LED Rechts einschalten - negative Logik
                             LED_pointer = 0;
                             break;
                         default:
@@ -338,32 +339,37 @@ void mainprogramm()
                         Musik(MELODIE_FEHLER);
                     } // end if (start_time_armpos + WAIT_TIME_ARM_ALARM < millis())
 
-                    read_armposition();
+                    read_armposition(); // Armposition einlesen und in Variable armposition speichern
 
                 } while (armposition == ARM_NO_POS);
-
             } // end if (armposition == ARM_NO_POS)
             else
-            { //  gültige Armposition ist hergestellt
-                // richtige LED zur Armposition einschalten  ------------------------------
-                digitalWrite(LL, AUS);
-                digitalWrite(LM, AUS);
-                digitalWrite(LR, AUS);
+            {                              //  gültige Armposition ist hergestellt
+                                           //  alle LED ausschalten - negative Logik
+                digitalWrite(LL, LED_AUS); // LED Links ausschalten - negative Logik
+                digitalWrite(LM, LED_AUS); // LED Mitte ausschalten - negative Logik
+                digitalWrite(LR, LED_AUS); // LED Rechts ausschalten - negative Logik
 
+                //         Serial.print("Encoder_count_neu  "); ///////////////////////////
+                Serial.println(armposition); ///////////////////////////
+                delay(200);
+                // richtige LED zur Armposition einschalten  ------------------------------
                 switch (armposition)
                 {
                 case ARM_LINKS:
-                    digitalWrite(LL, EIN); // LED links einschalten
+                    digitalWrite(LL, LED_EIN); // LED Links einschalten - negative Logik
                     break;
                 case ARM_MITTE:
-                    digitalWrite(LM, EIN); // LED mitte einschalten
+                    digitalWrite(LM, LED_EIN); // LED Mitte einschalten - negative Logik
                     break;
                 case ARM_RECHTS:
-                    digitalWrite(LR, EIN); // LED rechts einschalten
+                    digitalWrite(LR, LED_EIN); // LED Rechts einschalten - negative Logik
                     break;
                 default:
                     break;
                 } // end switch (armposition)
+
+                armposition_alt = armposition;
             } // else end if (armposition != ARM_NO_POS)
 
             // einstieg in Hauptschleife herstellen ------------------------------
@@ -374,8 +380,8 @@ void mainprogramm()
             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
             Encoder_count_store = OUT_OF_RANGE;
 
-            on_off_encoder = true;          // Encoder Interrupt einschalten
-            armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+            //           on_off_encoder = true;          // Encoder Interrupt einschalten
+
         } // end if (armposition_alt != armposition)
 
         // ENDE Armposition ermitteln ------------------------------
@@ -423,7 +429,8 @@ void mainprogramm()
                 if (press_key(ENTER_PIN, SCAN)) //  wenn ENTER Taste gedrückt wird
                 {
                     release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
-
+                    Serial.println("ENTER   ");
+                    delay(500);
                     min_counter = EDIT_CHAR_CURSOR_SART; // Minimalwert für Encoder 0
                     max_counter = anzahl_texteingabe;    // Maximalwert für Encoder (0 bis 39, also 40 Positionen)
 
@@ -435,7 +442,8 @@ void mainprogramm()
 
                     do
                     {
-                        read_armposition();
+                        read_armposition(); // Armposition einlesen und in Variable armposition speichern
+
                         if (armposition != armposition_alt)
                         {
                             min_counter = 0;                     // Minimalwert für Encoder
@@ -444,8 +452,8 @@ void mainprogramm()
                             Encoder_count_neu = 0;            // Verbleib im Manü case 0, (POS1 Überschrift)
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                            break; // Abbruch wenn Armposition sich geändert hat
-                        }
+                            break; // Abbruch von do ... while (LCD_cursor_position <= EDIT_LCD_CURSOR_MAX)  // wenn Armposition sich geändert hat
+                        } //  end   if (armposition != armposition_alt)
 
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
@@ -530,7 +538,7 @@ void mainprogramm()
                     do
                     { // editieren der Referenzmenge Gipsgewicht  -------------------------------
 
-                        read_armposition();
+                        read_armposition(); // Armposition einlesen und in Variable armposition speichern
                         if (armposition != armposition_alt)
                         {
                             min_counter = 0;                     // Minimalwert für Encoder
@@ -539,8 +547,8 @@ void mainprogramm()
                             Encoder_count_neu = 1;            // Verbleib im Manü case 1, (POS 02 - Referenz Gipsgewicht und Wassergewicht)
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                            break; // Abbruch wenn Armposition sich geändert hat
-                        }
+                            break; // do Schleifen Abbruch wenn Armposition sich geändert hat
+                        } //  end   if (armposition != armposition_alt)
 
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
@@ -566,11 +574,12 @@ void mainprogramm()
 
                     //  Bestehende Wassermenge in den Editor schreiben
                     Encoder_count_neu = daten[armposition].gewicht[1];
+                    Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                     do
                     { // editieren der Referenzmenge Wasser -------------------------------
 
-                        read_armposition();
+                        read_armposition(); // Armposition einlesen und in Variable armposition speichern
                         if (armposition != armposition_alt)
                         {
                             min_counter = 0;                     // Minimalwert für Encoder
@@ -580,7 +589,7 @@ void mainprogramm()
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                             break; // Abbruch wenn Armposition sich geändert hat
-                        }
+                        } //  end   if (armposition != armposition_alt)
 
                         if (Encoder_count_neu != Encoder_count_alt)
                         {
@@ -692,7 +701,7 @@ void mainprogramm()
 
                         do // H2O Abfüllung
                         {
-                            read_armposition();
+                            read_armposition(); // Armposition einlesen und in Variable armposition speichern
                             if (armposition != armposition_alt)
                             {
                                 min_counter = 0;                     // Minimalwert für Encoder
@@ -723,7 +732,7 @@ void mainprogramm()
 
                         do // Gips Abfüllung
                         {
-                            read_armposition();
+                            read_armposition(); // Armposition einlesen und in Variable armposition speichern
                             if (armposition != armposition_alt)
                             {
                                 min_counter = 0;                     // Minimalwert für Encoder
@@ -757,9 +766,6 @@ void mainprogramm()
                     {
                         lcd.setCursor(0, 1);
                         lcd.print("Kein Gips-Becher");
-
-                        //       lcd.setCursor(3, 1);
-                        //       lcd.print("?Gips-Becher?");
 
                         Musik(MELODIE_FEHLER);
                         delay(LCD_TIME); // Anzeige der Fehlermeldung
@@ -814,8 +820,8 @@ void mainprogramm()
                     max_counter = MAX_GEWICHT_EINGABE; // Maximalwert für Encoder (Gewicht 2000 g)
 
                     do
-                    { // editieren der Referenzmenge Gipsgewicht  -------------------------------
-                        read_armposition();
+                    {                       // editieren der Referenzmenge Gipsgewicht  -------------------------------
+                        read_armposition(); // Armposition einlesen und in Variable armposition speichern
                         if (armposition != armposition_alt)
                         {
                             min_counter = 0;                     // Minimalwert für Encoder
@@ -906,7 +912,7 @@ void mainprogramm()
 
                         do // H2O Abfüllung
                         {
-                            read_armposition();
+                            read_armposition(); // Armposition einlesen und in Variable armposition speichern
                             if (armposition != armposition_alt)
                             {
                                 min_counter = 0;                     // Minimalwert für Encoder
@@ -938,7 +944,7 @@ void mainprogramm()
 
                         do // Gips Abfüllung
                         {
-                            read_armposition();
+                            read_armposition(); // Armposition einlesen und in Variable armposition speichern
                             if (armposition != armposition_alt)
                             {
                                 min_counter = 0;                     // Minimalwert für Encoder
@@ -973,9 +979,6 @@ void mainprogramm()
                         lcd.setCursor(0, 1);
                         lcd.print("Kein Gips-Becher");
 
-                        //       lcd.setCursor(3, 1);
-                        //       lcd.print("?Gips-Becher?");
-
                         Musik(MELODIE_FEHLER);
                         delay(LCD_TIME); // Anzeige der Fehlermeldung
 
@@ -998,7 +1001,7 @@ void mainprogramm()
                     write_to_LCD[10] = false; // damit immer nur einmalig auf den LCD geschrieben wird
                 } // end if (erstmalig)
 
-                // Gipsentleerrn beginnt ---------------------------------------
+                // Gipsentleeren beginnt ---------------------------------------
                 if (press_key(I_O_PIN, SCAN)) //  wenn I/O Taste gedrückt wird
                 {
                     if (becher[armposition]) //  Becher der Armposition ist vorhanden
@@ -1009,7 +1012,7 @@ void mainprogramm()
 
                         do
                         {
-                            read_armposition();
+                            read_armposition(); // Armposition einlesen und in Variable armposition speichern
                             if (armposition != armposition_alt)
                             {
                                 min_counter = 0;                     // Minimalwert für Encoder
@@ -1018,20 +1021,21 @@ void mainprogramm()
                                 //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                                break; // Abbruch wenn Armposition sich geändert hat
+
+                                break; // do Schleifen Abbruch wenn Armposition sich geändert hat
                             } // end if (armposition != armposition_alt)
 
-                        } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
+                            //  } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
+                        } while (press_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
 
                         digitalWrite(relais[armposition], AUS); // Relais Gipsmotor [ARM Position] ausschalten
+
+                        release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
                     } //  end  if (becher[armposition])
                     else
                     {
                         lcd.setCursor(0, 1);
                         lcd.print("Kein Gips-Becher");
-
-                        //       lcd.setCursor(3, 1);
-                        //       lcd.print("?Gips-Becher?");
 
                         Musik(MELODIE_FEHLER);
                         delay(LCD_TIME); // Anzeige der Fehlermeldung
@@ -1039,7 +1043,8 @@ void mainprogramm()
                         Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
                     } //  end else  if (becher[armposition])
 
-                    on_off_encoder = true;  // Encoder Interrupt einschalten
+                    on_off_encoder = true; // Encoder Interrupt einschalten
+
                     Encoder_count_neu = 10; //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 10
                 } // end  if (!digitalRead(I_O_PIN))
 
@@ -1069,7 +1074,7 @@ void mainprogramm()
 
                     do
                     {
-                        read_armposition();
+                        read_armposition(); // Armposition einlesen und in Variable armposition speichern
                         if (armposition != armposition_alt)
                         {
                             min_counter = 0;                     // Minimalwert für Encoder
@@ -1078,13 +1083,17 @@ void mainprogramm()
                             //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                            break; // Abbruch wenn Armposition sich geändert hat
+                            break;                            // Abbruch wenn Armposition sich geändert hat
                         } // end if (armposition != armposition_alt)
-                    } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
+                        //   } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
+                    } while (press_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
 
                     digitalWrite(RELAIS_WP, AUS); // Relais Wasserpumpe ausschalten
 
-                    on_off_encoder = true;  // Encoder Interrupt einschalten
+                    release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
+
+                    on_off_encoder = true; // Encoder Interrupt einschalten
+
                     Encoder_count_neu = 11; //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 11
                 } // end  if (!digitalRead(I_O_PIN))
 

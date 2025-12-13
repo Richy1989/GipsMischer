@@ -26,14 +26,12 @@
  *      HARDWARE DEFINITIONEN  Anfang        *
  *******************************************/
 
-// #define ??? nur Ausgang (LED)      13
+// #define ??? nur Ausgang (LED)      13  NU - Achtung: nur Ausgang (LED)
 
 //  Pin Definition für Eingang Arduino:3 x Hall Sensor
-#define AM 12 // Eingang Armposition MITTE, pullup
-#define AR 11 // Eingang Armposition RECHTS, pullup
-#define AL 1  // Eingang Armposition LINKS, pullup
-
-// #define ???                        10 // NU
+#define AM 12  // Eingang Armposition LINKS,  pullup
+#define AL 11  // Eingang Armposition MITTE,  pullup
+#define AR 10  // Eingang Armposition RECHTS, pullup
 
 //  Pin Definition für Eingang Arduino:3 x GIPS_BECHER
 #define BL 9 // GIPS_BECHER_LINKS_PIN
@@ -47,9 +45,13 @@
 //  Pin Definition für Ausgang Piepser Arduino
 #define TONE_PIN 4 // Ausgang für Buzzer, Piezo Lautsprecher
 
+//  Pin Definition für ENCODER unten
+// #define ???                        3  // ENCODER_A
+// #define ???                        2  // ENCODER_B
+
 //  Pin Definition für NU
-// #define ???                        3  // NU
-// #define ???                        0  // NU
+// #define ???						  1  // NU - Achtung: TXD0
+// #define ???                        0  // NU - Achtung: RXD0
 
 //  Pin Definition für Ausgang LED Frontanzeige Arduino:3 x LED
 #define LL 14 // Ausgang Front LED LINKS
@@ -161,6 +163,9 @@
 #define EIN 0
 #define AUS 1
 
+#define LED_EIN 1
+#define LED_AUS 0
+
 #define ARM_LINKS 0
 #define ARM_MITTE 1
 #define ARM_RECHTS 2
@@ -223,7 +228,7 @@
 #define MAX_GEWICHT_EINGABE 2000
 
 // Wartezeit in ms
-#define WAIT_TIME_LED 750	  // LED Hell- und Dunkelzeit beim service blinken
+#define WAIT_TIME_LED 1000	  // LED Einschalt- Lauflichtzeit in der Serviceroutine
 #define WAIT_TIME_LED_II 333  // LED Alarmblinkzeit bei keiner definierten Armposition
 #define WAIT_TIME_ARM_ALARM 3000 // nach dieser Zeit erfolgt ein akustischer Fehleralarm bei keiner definierten Armposition
 #define WAIT_TIME_2 3000	  // ersten 3 Sekunden anzeige

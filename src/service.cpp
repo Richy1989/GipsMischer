@@ -3,22 +3,18 @@
 // *********  Armpositionen einlesen und in Variable armposition speichern, negative Logik ******
 void read_armposition()
 {
-	// NUR ZUM SOFTWARETESTEN, SPÄTER ENTFERNEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	armposition = ARM_LINKS;
-	return;
-
-	if (!digitalRead(AL)) // Negative Logik (LOW = aktiv)
-		armposition = ARM_LINKS;
+	if (!digitalRead(AR))		  // Negative Logik (LOW = aktiv)
+		armposition = ARM_RECHTS; // 2
 	else
 	{
-		if (!digitalRead(AM))
-			armposition = ARM_MITTE;
+		if (!digitalRead(AM))		 // Negative Logik (LOW = aktiv)
+			armposition = ARM_MITTE; // 1
 		else
 		{
-			if (!digitalRead(AR))
-				armposition = ARM_RECHTS;
+			if (!digitalRead(AL))		 // Negative Logik (LOW = aktiv)
+				armposition = ARM_LINKS; // 0
 			else
-				armposition = ARM_NO_POS;
+				armposition = ARM_NO_POS; // 3
 		} //  end else if (!digitalRead(AM))
 	} //  end else if (!digitalRead(AL))
 } //  end read_armposition()
@@ -28,10 +24,6 @@ void read_armposition()
 // *********  Becher einlesen und in Array becher speichern, negative Logik *****
 void read_becher()
 {
-	// NUR ZUM SOFTWARETESTEN, SPÄTER ENTFERNEN
-	becher[0] = BECHER_OK;
-	return;
-
 	for (unsigned int i = 0; i < BECHER_ANZAHL; i++) // 0 bis 2, also 3 Becher
 	{
 		becher[i] = NO_BECHER;
@@ -178,9 +170,9 @@ void Musik(int Melodie)
 		noTone(TONE_PIN);
 		break;
 
-		case MELODIE_TON_1000:
-		tone(TONE_PIN, 1000, 200);  // 1000 Hz
-	//	delay(200);
+	case MELODIE_TON_1000:
+		tone(TONE_PIN, 1000, 200); // 1000 Hz
+								   //	delay(200);
 		noTone(TONE_PIN);
 		break;
 
@@ -341,29 +333,29 @@ void service()
 
 				do
 				{							   // WAIT_TIME_LED wiederholt den do Schleifen durchlaufen
-					start_time_LED = millis(); //  neu Startzeit für LED Blinkzeit setzen
+					start_time_LED = millis(); //  neu Startzeit für LED Leuchtzeit setzen
 
-					digitalWrite(LL, AUS);
-					digitalWrite(LM, AUS);
-					digitalWrite(LR, AUS);
+					digitalWrite(LL, LED_AUS); // LED links ausschalten - negative Logik
+					digitalWrite(LM, LED_AUS); // LED mitte ausschalten - negative Logik
+					digitalWrite(LR, LED_AUS); // LED rechts ausschalten - negative Logik
 
 					switch (LED_pointer)
 					{
 					case 0:
-						digitalWrite(LL, EIN); // LED links einschalten
-						lcd.setCursor(7, 1);   // Setz Curser auf Charakter 8, Zeile 2
+						digitalWrite(LL, LED_EIN); // LED links einschalten - - negative Logik
+						lcd.setCursor(7, 1);	   // Setz Curser auf Charakter 8, Zeile 2
 						lcd.print("LED Links");
 						LED_pointer = 1;
 						break;
 					case 1:
-						digitalWrite(LM, EIN); // LED mitte einschalten
-						lcd.setCursor(7, 1);   // Setz Curser auf Charakter 8, Zeile 2
+						digitalWrite(LM, LED_EIN); // LED mitte einschalten - - negative Logik
+						lcd.setCursor(7, 1);	   // Setz Curser auf Charakter 8, Zeile 2
 						lcd.print("LED Mitte");
 						LED_pointer = 2;
 						break;
 					case 2:
-						digitalWrite(LR, EIN); // LED rechts einschalten
-						lcd.setCursor(7, 1);   // Setz Curser auf Charakter 8, Zeile 2
+						digitalWrite(LR, LED_EIN); // LED rechts einschalten - - negative Logik
+						lcd.setCursor(7, 1);	   // Setz Curser auf Charakter 8, Zeile 2
 						lcd.print("LED Recht");
 						LED_pointer = 0;
 						break;
@@ -374,15 +366,20 @@ void service()
 					do
 					{														// warten bis Encoder den Wert geändert hat oder die Zeit vergangen ist oder I/O Taste gedrückt ist
 					} while ((Encoder_count_neu == Encoder_count_alt) &&	// logische UND
-							 (start_time_LED + WAIT_TIME_LED > millis()) && // 750 ms Sekunden
-							 (digitalRead(I_O_PIN)));
+							 (start_time_LED + WAIT_TIME_LED > millis()) && // 1000 ms Sekunden
+							 (digitalRead(I_O_PIN))); // Bedinerabbruch
 
 					if (!digitalRead(I_O_PIN))
 						return; // Bedinerabbruch, Servicemenü verlassen
 
 				} while (Encoder_count_neu == Encoder_count_alt); //  solange bis encoder den Wert geändert hat
 
-				come_back();					  // Rückkehrerkennung, Encoder Grenzen setzen und interrupt zulassen, erste LCD-Zeile Beschriften
+				come_back(); // Rückkehrerkennung, Encoder Grenzen setzen und interrupt zulassen, erste LCD-Zeile Beschriften
+
+				digitalWrite(LL, LED_AUS); // LED links ausschalten - negative Logik
+				digitalWrite(LM, LED_AUS); // LED mitte ausschalten - negative Logik
+				digitalWrite(LR, LED_AUS); // LED rechts ausschalten - negative Logik
+
 				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
 				break; //  end case LED_TEST
@@ -402,61 +399,70 @@ void service()
 
 				do
 				{
-					// Becher Links
-					lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
-
-					if (!digitalRead(BL)) // wenn Becher Links erkannt wird
-					{
-						if (!bl_LCD_OK) // OK Erkennung wurde nicht LCD geschrieben
-						{
-							bl_LCD_NO = false; // NO Erkennung wurde nicht auf LCD geschrieben
-							bl_LCD_OK = true;  // OK Erkennung wurde auf LCD geschrieben
+					// Becher Links --------------------------
+					if (!digitalRead(BL))		 // wenn Becher Links erkannt wird
+					{							 // Becher Links wird erkannt
+						if (!bl_LCD_OK)			 // wenn OK Erkennung nicht auf LCD geschrieben
+						{						 // OK Erkennung wurde nicht auf LCD geschrieben
+							lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
 							lcd.print("OK");
+							bl_LCD_OK = true; // OK Erkennung wurde auf LCD geschrieben
+
+							bl_LCD_NO = false; // NO Erkennung wurde NICHT auf LCD geschrieben
 						} // end   if (!bl_LCD_OK)
 					} // end if (!digitalRead(BL))
-					else if (!bl_LCD_NO)
-					{
-						bl_LCD_NO = true;  // NO Erkennung wurde auf LCD geschrieben
-						bl_LCD_OK = false; // OK Erkennung wurde nicht auf LCD geschrieben
+					// Becher Links NICHT erkannt
+					else if (!bl_LCD_NO)	 // wenn NO Erkennung nicht auf LCD geschrieben
+					{						 // NO Erkennung wurde NICHT auf LCD geschrieben
+						lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
 						lcd.print("NO");
+						bl_LCD_NO = true; // NO Erkennung wird auf LCD geschrieben
+
+						bl_LCD_OK = false; // OK Erkennung wurde NICHT auf LCD geschrieben
 					} // end  if (!blLCD_NO)
 
-					// Becher Mitte
-					lcd.setCursor(8, 1); // Setz Curser auf Charakter 9, Zeile 2
-
-					if (!digitalRead(BM)) // wenn Becher Mitte erkannt wird
-					{
-						if (!bm_LCD_OK) // OK Erkennung wurde nicht LCD geschrieben
-						{
-							bm_LCD_NO = false; // NO Erkennung wurde nicht auf LCD geschrieben
-							bm_LCD_OK = true;  // OK Erkennung wurde auf LCD geschrieben
+					// Becher Mitte --------------------------
+					if (!digitalRead(BM))		 // wenn Becher Mitte erkannt wird
+					{							 // Becher Mitte wird erkannt
+						if (!bm_LCD_OK)			 // wenn OK Erkennung nicht auf LCD geschrieben wurde
+						{						 // OK Erkennung wurde nicht auf LCD geschrieben
+							lcd.setCursor(8, 1); // Setz Curser auf Charakter 9, Zeile 2
 							lcd.print("OK");
+							bm_LCD_OK = true; // OK Erkennung wird auf LCD geschrieben
+
+							bm_LCD_NO = false; // NO Erkennung wurde NICHT auf LCD geschrieben
 						} // end   if (!bm_LCD_OK)
 					} // end if (!digitalRead(BM))
-					else if (!bm_LCD_NO)
-					{
-						bm_LCD_NO = true;  // NO Erkennung wurde auf LCD geschrieben
-						bm_LCD_OK = false; // OK Erkennung wurde nicht auf LCD geschrieben
+					// Becher Mitte wurde NICHT erkannt
+					else if (!bm_LCD_NO)	 // wenn NO Erkennung NICHT auf LCD geschrieben
+					{						 // NO Erkennung wurde NICHT auf LCD geschrieben
+						lcd.setCursor(8, 1); // Setz Curser auf Charakter 9, Zeile 2
 						lcd.print("NO");
+						bm_LCD_NO = true; // NO Erkennung wird auf LCD geschrieben
+
+						bm_LCD_OK = false; // OK Erkennung wurde NICHT auf LCD geschrieben
 					} // end  if (!bm_LCD_NO)
 
-					// Becher Rechts
-					lcd.setCursor(14, 1); // Setz Curser auf Charakter 15, Zeile 2
-
-					if (!digitalRead(BR)) // wenn Becher Rechts erkannt wird
-					{
-						if (!br_LCD_OK) // OK Erkennung wurde nicht LCD geschrieben
-						{
-							br_LCD_NO = false; // NO Erkennung wurde nicht auf LCD geschrieben
-							br_LCD_OK = true;  // OK Erkennung wurde auf LCD geschrieben
+					// Becher Rechts --------------------------
+					if (!digitalRead(BR))		  // wenn Becher Rechts erkannt wird
+					{							  // Becher Rechts wird erkannt
+						if (!br_LCD_OK)			  // wenn OK Erkennung NICHT auf LCD geschrieben wurde
+						{						  // OK Erkennung wurde NICHT auf LCD geschrieben
+							lcd.setCursor(14, 1); // Setz Curser auf Charakter 15, Zeile 2
 							lcd.print("OK");
+							br_LCD_OK = true; // OK Erkennung wird auf LCD geschrieben
+
+							br_LCD_NO = false; // NO Erkennung wurde NICHT auf LCD geschrieben
 						} // end   if (!br_LCD_OK)
 					} // end if (!digitalRead(BR))
-					else if (!br_LCD_NO)
-					{
-						br_LCD_NO = true;  // NO Erkennung wurde auf LCD geschrieben
-						br_LCD_OK = false; // OK Erkennung wurde nicht auf LCD geschrieben
+					// Becher Rechts wurde NICHT erkannt
+					else if (!br_LCD_NO)	  // wenn NO Erkennung NICHT auf LCD geschrieben
+					{						  // NO Erkennung wurde NICHT auf LCD geschrieben
+						lcd.setCursor(14, 1); // Setz Curser auf Charakter 15, Zeile 2
 						lcd.print("NO");
+						br_LCD_NO = true; // NO Erkennung wird auf LCD geschrieben
+
+						br_LCD_OK = false; // OK Erkennung wurde NICHT auf LCD geschrieben
 					} // end  if (!br_LCD_NO)
 
 					if (!digitalRead(I_O_PIN))
@@ -467,7 +473,7 @@ void service()
 				come_back();					  // Rückkehrerkennung, Encoder Grenzen setzen und interrupt zulassen, erste LCD-Zeile Beschriften
 				Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-				break; //  end case BECHER_TEST
+				break; // end case BECHER_TEST
 
 			case TON_TEST:					   /*  IMMER NUR EIN Programm DURCHLAUF  */
 				lcd.setCursor(0, 0);		   // Setz Curser auf Charakter 1, Zeile 1
@@ -515,7 +521,7 @@ void service()
 
 				do
 				{
-					read_armposition(); // Armposition einlesen
+					read_armposition(); // Armposition in Variable armposition einlesen
 
 					if (armposition != armposition_alt)
 					{
@@ -861,10 +867,16 @@ void service()
 							//  erstmalige Dateneingabe initialisieren
 							for (int i = 0; i < ARM_ANZAHL; i++) // 0 bis 2 Arm (3 Arme)
 							{
-								strcpy(daten[i].ueberschrift, "UEBERSCHRIFT1"); // Initialisierung der Überschrift - 13 Caraktere
+								// Initialisierung der Überschrift - 13 Caraktere
+								if (i == 0)
+									(strcpy(daten[i].ueberschrift, "UEBERSCHRIFT1"));
+								if (i == 1)
+									(strcpy(daten[i].ueberschrift, "UEBERSCHRIFT2"));
+								if (i == 2)
+									(strcpy(daten[i].ueberschrift, "UEBERSCHRIFT3"));
 
-								for (int j = 0; j < (MAX_GEWICHTANZAHL); j++)   // 0 bis 9 Gewichte pro Arm (10 Gewichte)
-									daten[i].gewicht[j] = 1;					// Initialisierung der Gewichte in g, nicht 0 wegen Division
+								for (int j = 0; j < (MAX_GEWICHTANZAHL); j++) // 0 bis 9 Gewichte pro Arm (10 Gewichte)
+									daten[i].gewicht[j] = 1;				  // Initialisierung der Gewichte in g, nicht 0 wegen Division
 
 								// Vorfixierte Gewichte in g
 								if (i == 1) // Bei ARM mitte
