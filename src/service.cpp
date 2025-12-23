@@ -3,20 +3,55 @@
 // *********  Armpositionen einlesen und in Variable armposition speichern, negative Logik ******
 void read_armposition()
 {
-	if (!digitalRead(AR))		  // Negative Logik (LOW = aktiv)
-		armposition = ARM_RECHTS; // 2
-	else
+	armposition = ARM_NO_POS; // 3
+
+	Serial.print("Armposition Links:  "); ///////////////////////////
+	if (!digitalRead(AL))					// Negative Logik (LOW = aktiv)
 	{
-		if (!digitalRead(AM))		 // Negative Logik (LOW = aktiv)
-			armposition = ARM_MITTE; // 1
+		armposition = ARM_LINKS; // 0
+		Serial.println("JA");	 ///////////////////////////
+	}
+	else
+		Serial.println("NEIN"); ///////////////////////////
+
+	Serial.print("Armposition Mitte:  "); ///////////////////////////
+	if (!digitalRead(AM))					// Negative Logik (LOW = aktiv)
+	{
+		armposition = ARM_MITTE; // 1
+		Serial.println("JA");	 ///////////////////////////
+	}
+	else
+		Serial.println("NEIN"); ///////////////////////////
+
+	Serial.print("Armposition Rechts:  "); ///////////////////////////
+	if (!digitalRead(AR))					 // Negative Logik (LOW = aktiv)
+	{
+		armposition = ARM_RECHTS; // 2
+		Serial.println("JA");	  ///////////////////////////
+	}
+	else
+		Serial.println("NEIN"); ///////////////////////////
+
+			Serial.print("Armposition 0/1/2/3:  "); ///////////////////////////
+			Serial.println(armposition); ///////////////////////////
+
+			delay(750);
+	/*
+					if (!digitalRead(AL))		 // Negative Logik (LOW = aktiv)
+			armposition = ARM_LINKS; // 0
 		else
 		{
-			if (!digitalRead(AL))		 // Negative Logik (LOW = aktiv)
-				armposition = ARM_LINKS; // 0
+			if (!digitalRead(AM))		 // Negative Logik (LOW = aktiv)
+				armposition = ARM_MITTE; // 1
 			else
-				armposition = ARM_NO_POS; // 3
-		} //  end else if (!digitalRead(AM))
-	} //  end else if (!digitalRead(AL))
+			{
+				if (!digitalRead(AR))		  // Negative Logik (LOW = aktiv)
+					armposition = ARM_RECHTS; // 2
+		//		else
+		//			armposition = ARM_NO_POS; // 3
+			} //  end else if (!digitalRead(AM))
+		} //  end else if (!digitalRead(AL))
+		 */
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/
 
@@ -25,18 +60,16 @@ void read_armposition()
 void read_becher()
 {
 	for (unsigned int i = 0; i < BECHER_ANZAHL; i++) // 0 bis 2, also 3 Becher
-	{
-		becher[i] = NO_BECHER;
+		becher[i] = NO_BECHER;						 //  alle Becher löschen
 
-		if (!digitalRead(BL)) // Negative Logik (LOW = aktiv)
-			becher[i] = BECHER_OK;
+	if (!digitalRead(BL))	   // Negative Logik (LOW = aktiv)
+		becher[0] = BECHER_OK; // Becher LINKS
 
-		if (!digitalRead(BM)) // Negative Logik (LOW = aktiv)
-			becher[i] = BECHER_OK;
+	if (!digitalRead(BM))	   // Negative Logik (LOW = aktiv)
+		becher[1] = BECHER_OK; // Becher MITTE
 
-		if (!digitalRead(BR)) // Negative Logik (LOW = aktiv)
-			becher[i] = BECHER_OK;
-	} // end for (unsigned int i = 0; i < BECHER_ANZAHL; i++)
+	if (!digitalRead(BR))	   // Negative Logik (LOW = aktiv)
+		becher[2] = BECHER_OK; // Becher RECHTS
 } //  end read_becher()
 /****************************    Ende read_becher() 	********************************/
 
@@ -171,7 +204,7 @@ void Musik(int Melodie)
 		break;
 
 	case MELODIE_TON_1000:
-		tone(TONE_PIN, 1000, 200); // 1000 Hz
+		tone(TONE_PIN, 1000, 250); // 1000 Hz
 								   //	delay(200);
 		noTone(TONE_PIN);
 		break;
@@ -517,7 +550,7 @@ void service()
 				lcd.print("ARM TEST    :I/O"); // Text in erster Zeile anzeigen
 
 				armposition = ARM_NO_POS;		// keine Position, Startwert
-				armposition_alt = OUT_OF_RANGE; // Startwert für Erstanfang
+				armposition_alt = OUT_OF_RANGE; // einmaliger Startwert für Erstanfang
 
 				do
 				{

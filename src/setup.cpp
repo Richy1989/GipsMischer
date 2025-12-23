@@ -10,7 +10,6 @@ float Leergew_einheiten;
 float Eichgew_einheiten;
 float Gewicht;
 float Gewicht_alt;
-float teilgewicht_gips;
 float teilgewicht_h2o;
 float gesamtgewicht;
 float gewicht_waagschale;
@@ -141,7 +140,7 @@ const unsigned int anzahl_daten = sizeof(daten); //  Bytegröße der Variablen d
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 //  unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-unsigned long gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+unsigned long h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
 
 // Array of Becher (0 bis 2) also 3 für 

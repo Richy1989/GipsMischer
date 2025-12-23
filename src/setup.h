@@ -29,9 +29,9 @@
 // #define ??? nur Ausgang (LED)      13  NU - Achtung: nur Ausgang (LED)
 
 //  Pin Definition für Eingang Arduino:3 x Hall Sensor
-#define AM 12  // Eingang Armposition LINKS,  pullup
-#define AL 11  // Eingang Armposition MITTE,  pullup
-#define AR 10  // Eingang Armposition RECHTS, pullup
+#define AM 12  // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
+#define AL 11  // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
+#define AR 10  // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
 
 //  Pin Definition für Eingang Arduino:3 x GIPS_BECHER
 #define BL 9 // GIPS_BECHER_LINKS_PIN
@@ -210,7 +210,7 @@
 
 // in der Encoder Interruptfunktion wird die Variable Encoder_count_neu verändert.
 // Langsames drehen ist der Zahlensprung +/- 1
-// Schnelles drehen ist der Zahlensprung +/- FAST_INCREMENT (10)
+// Schnelles drehen ist der Zahlensprung FAST_INCREMENT +/- 10
 // die Variable Encoder_count_neu erhält immer ein Zahl aus dem Wertebereich von min_counter bis max_counter
 #define FAST_INCREMENT 10
 
@@ -232,8 +232,8 @@
 #define WAIT_TIME_LED_II 333  // LED Alarmblinkzeit bei keiner definierten Armposition
 #define WAIT_TIME_ARM_ALARM 3000 // nach dieser Zeit erfolgt ein akustischer Fehleralarm bei keiner definierten Armposition
 #define WAIT_TIME_2 3000	  // ersten 3 Sekunden anzeige
-#define WAIT_TIME_3 5000	  // zweiten 2 Sekunden anzeige
-#define WAIT_TIME_4 8000	  // dritten 3 Sekunden anzeige
+#define WAIT_TIME_3 6000	  // zweiten 3 Sekunden anzeige
+#define WAIT_TIME_4 9000	  // dritten 3 Sekunden anzeige
 #define ENTPRELL_ZEIT 4		  // Tastaturentprellzeit in ms
 #define WAAGE_READY_TIME 3000 // Wartezeit bis die Waage bereit ist in ms
 #define LCD_TIME 3000         // Fehler Anzeigezeit am LCD in ms
@@ -265,12 +265,12 @@
 #define CURSOR 2
 #define RECHTECK 3
 
-// Vordefinierte Gips FIX Gewichte
+// Vordefinierte Gips FIX Gewichte bei Armposition Links und Rechts
 #define FIXGEWICHT_01 130
 #define FIXGEWICHT_02 260
 #define FIXGEWICHT_03 390
 #define FIXGEWICHT_04 520
-// Reserve Fixgewichte
+// Vordefinierte Gips FIX Gewichte bei Armposition Mitte
 #define FIXGEWICHT_11 160
 #define FIXGEWICHT_12 320
 #define FIXGEWICHT_13 480
@@ -302,7 +302,6 @@ extern float Leergew_einheiten;
 extern float Eichgew_einheiten;
 extern float Gewicht;
 extern float Gewicht_alt;
-extern float teilgewicht_gips;
 extern float teilgewicht_h2o;
 extern float gesamtgewicht;
 extern float gewicht_waagschale;
@@ -370,7 +369,7 @@ extern const unsigned int anzahl_daten;
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 // extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-extern unsigned long gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+extern unsigned long h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
 // Array of Becher (0 bis 2) also 3 für 

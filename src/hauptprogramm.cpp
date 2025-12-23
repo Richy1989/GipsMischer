@@ -73,7 +73,7 @@ void greeting()
 
     do
     {
-        // press_key(ENTER_PIN, SCAN);
+        // ==========================================================================
         //  Wenn Taste ENTER und I/O Taste gleichzeitig gedrückt ist, also low
         //  wird die Service Routine aufgerufen
         //  (Enter Taste ist die linke Taste auf der Bedieneinheit)
@@ -86,7 +86,12 @@ void greeting()
 
             start_time = millis(); // Startzeit für Begrüßung setzen
         } // end if (!digitalRead(ENTER_PIN) && !digitalRead(I_O_PIN))
+        // ==========================================================================
 
+        // ==========================================================================
+        //  Wenn die Taste Waage gedrückt ist, also low
+        //  wird die Begrüßung übersprungen
+        //  (Waage Taste ist die mittlere Taste auf der Bedieneinheit)
         if (press_key(WAAGE_PIN, SCAN))
         {
             release_key(WAAGE_PIN, WAIT);
@@ -94,15 +99,16 @@ void greeting()
             Musik(MELODIE_ANFANG);
             break; // Begrüßung beenden und ins Hauptprogramm wechseln
         } // end if (!digitalRead(WAAGE_PIN))
+        // ==========================================================================
 
         // Laufschrift zur Begrüßung:
-        // *   Zahntechnik   * *   powered by   *  *    Richard     *
-        // *    Obwegeser   *  *V-1.00 :Nov 2025*  *    LEOPOLD     *
+        // *   Zahntechnik  * *   powered by   *  *    Richard     *
+        // *    Obwegeser  *  *V-1.00 :Dez 2025*  *    LEOPOLD     *
 
         if (millis() - start_time < WAIT_TIME_2) // Anzeige der ersten 3 Sekunden
         {
             lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
-            lcd.print("   Zahntechnik   ");
+            lcd.print("   Zahntechnik  ");
             lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
             lcd.print("    Obwegeser   ");
         } // end if (delta_time < WAIT_TIME_2)
@@ -113,7 +119,7 @@ void greeting()
                 lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 2
                 lcd.print("   powered by   ");
                 lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-                lcd.print("V-1.00 :Nov 2025");
+                lcd.print("V-1.00 :Dez 2025");
             } // end else...if (delta_time < WAIT_TIME_3)
             else if (millis() - start_time < WAIT_TIME_4) // Anzeige der dritten 3 Sekunden
             {
@@ -182,7 +188,7 @@ void mainprogramm()
     Encoder_count_store = OUT_OF_RANGE;
 
     //  on_off_encoder = true;          // Encoder Interrupt einschalten
-    armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+    armposition_alt = OUT_OF_RANGE; //  Erststartbedingung herstellen, Einmalig OUT_OF_RANGE
 
     do
     {
@@ -192,7 +198,12 @@ void mainprogramm()
         {
             release_key(ENTER_PIN, WAIT); //  Warten bis ENTER Taste losgelasen wird
 
-            //           on_off_encoder = false;       // Encoder Interrupt ausschalten
+            on_off_encoder = false; // Encoder Interrupt ausschalten
+
+            //  alle LED ausschalten - negative Logik
+            digitalWrite(LL, LED_AUS); // LED Links ausschalten
+            digitalWrite(LM, LED_AUS); // LED Mitte ausschalten
+            digitalWrite(LR, LED_AUS); // LED Rechts ausschalten
 
             lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 1
             lcd.print(" Waagefunktion  ");
@@ -220,14 +231,14 @@ void mainprogramm()
                 break; //  Abbruch der Waagefunktion, zurück ins Hauptmenü
             } // end if (millis() - start_time < WAAGE_READY_TIME)
 
-            Gewicht_alt = OUT_OF_RANGE;                                                         // Gewicht_alt auf 0 setzen, damit Gewicht angezeigt wird
+            Gewicht_alt = OUT_OF_RANGE;  // Gewicht_alt auf 0 setzen, damit Gewicht angezeigt wird
             gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessene Grundgewicht
 
             do
             {
-                // Differenz der Gewichtseinheit minus der Leereinheitdurch,
-                // Dividiert Korrekturfaktor
-                Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+                Gewicht = (scale.read_average(3) - // Differenz der Gewichtseinheit minus der Leereinheit
+                           Leergew_einheiten) /    // dividiert durchKorrekturfaktor
+                          Korrekturfaktor;
 
                 if (Gewicht != Gewicht_alt) // Anzeigen des Gewichtes nur wenn es sich geändert hat
                 {
@@ -236,7 +247,7 @@ void mainprogramm()
                     lcd.print("     ");    // Clear previous value
                     lcd.setCursor(9, 1);
 
-                    int mom_Gewicht = (int)(Gewicht - gewicht_waagschale);
+                    int mom_Gewicht = (int)(Gewicht - (int)gewicht_waagschale);
 
                     if (Gewicht > MAX_GEWICHT) // Maximalgewicht (inklusive gewicht_waagschale) überschritten
                     {
@@ -250,10 +261,10 @@ void mainprogramm()
                     else
                     {
                         if (mom_Gewicht == -1)
-                            mom_Gewicht = 0; // Tolleranzbereich -1g bis 0g, damit Aneige um den 0 Punkt stabil bleibt
+                            mom_Gewicht = 0; // Tolleranzbereich -1g bis 0g, damit Anzeige um den 0 Punkt stabil bleibt
 
                         lcd.print(mom_Gewicht); // Gewicht anzeigen
-                    } //  end  if (Gewicht > MAX_GEWICHT)
+                    } //  end else if (Gewicht > MAX_GEWICHT)
 
                 } // end if (Gewicht != Gewicht_alt)
 
@@ -269,9 +280,7 @@ void mainprogramm()
             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
             Encoder_count_store = OUT_OF_RANGE;
 
-            //         on_off_encoder = true; // Encoder Interrupt einschalten
-            // armposition_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
-
+            on_off_encoder = true; // Encoder Interrupt einschalten
         } // end if (press_key(WAAGE_PIN, SCAN))
         // Ende WAAGE FUNKTION     Taste Waage wurde wiederum gedrückt -----------------------------------
 
@@ -289,13 +298,15 @@ void mainprogramm()
             armposition_alt = armposition;
 
             //  alle LED ausschalten - negative Logik
-            digitalWrite(LL, LED_AUS); // LED Links ausschalten - negative Logik
-            digitalWrite(LM, LED_AUS); // LED Mitte ausschalten - negative Logik
-            digitalWrite(LR, LED_AUS); // LED Rechts ausschalten - negative Logik
+            digitalWrite(LL, LED_AUS); // LED Links ausschalten
+            digitalWrite(LM, LED_AUS); // LED Mitte ausschalten
+            digitalWrite(LR, LED_AUS); // LED Rechts ausschalten
 
             if (armposition == ARM_NO_POS)
             {
-                LED_pointer = 0;              // LED Adressierung im no Arm Positions Alarmfall
+                digitalWrite(LL, LED_EIN); // LED Links einschalten
+                LED_pointer = 1;           // Nächste LED welche leuchtet ist LED Mitte
+
                 start_time_LED = millis();    // Startzeit für LED Blinkzeit setzen
                 start_time_armpos = millis(); // Startzeit für Armpositions Alarm setzen
 
@@ -310,22 +321,22 @@ void mainprogramm()
                         start_time_LED = millis(); //  neu Startzeit für LED Blinkzeit setzen
 
                         //  alle LED ausschalten - negative Logik
-                        digitalWrite(LL, LED_AUS); // LED Links ausschalten - negative Logik
-                        digitalWrite(LM, LED_AUS); // LED Mitte ausschalten - negative Logik
-                        digitalWrite(LR, LED_AUS); // LED Rechts ausschalten - negative Logik
+                        digitalWrite(LL, LED_AUS); // LED Links ausschalten
+                        digitalWrite(LM, LED_AUS); // LED Mitte ausschalten
+                        digitalWrite(LR, LED_AUS); // LED Rechts ausschalten
 
                         switch (LED_pointer)
                         {
                         case 0:
-                            digitalWrite(LL, LED_EIN); // LED Links einschalten - negative Logik
+                            digitalWrite(LL, LED_EIN); // LED Links einschalten
                             LED_pointer = 1;
                             break;
                         case 1:
-                            digitalWrite(LM, LED_EIN); // LED Mitte einschalten - negative Logik
+                            digitalWrite(LM, LED_EIN); // LED Mitte einschalten
                             LED_pointer = 2;
                             break;
                         case 2:
-                            digitalWrite(LR, LED_EIN); // LED Rechts einschalten - negative Logik
+                            digitalWrite(LR, LED_EIN); // LED Rechts einschalten
                             LED_pointer = 0;
                             break;
                         default:
@@ -357,13 +368,13 @@ void mainprogramm()
                 switch (armposition)
                 {
                 case ARM_LINKS:
-                    digitalWrite(LL, LED_EIN); // LED Links einschalten - negative Logik
+                    digitalWrite(LL, LED_EIN); // LED Links einschalten
                     break;
                 case ARM_MITTE:
-                    digitalWrite(LM, LED_EIN); // LED Mitte einschalten - negative Logik
+                    digitalWrite(LM, LED_EIN); // LED Mitte einschalten
                     break;
                 case ARM_RECHTS:
-                    digitalWrite(LR, LED_EIN); // LED Rechts einschalten - negative Logik
+                    digitalWrite(LR, LED_EIN); // LED Rechts einschalten
                     break;
                 default:
                     break;
@@ -391,7 +402,7 @@ void mainprogramm()
         // Hauptmenü ------------------------------------------------
         if (Encoder_count_neu != Encoder_count_alt)
         {
-
+            // LCD Beschreibung koordinieren
             if (Encoder_count_store != Encoder_count_neu) // LCD muss neu beschrieben werden
             {
                 for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
@@ -614,12 +625,13 @@ void mainprogramm()
                     EEPROM.put(0, daten);
                     // Schreiben der komletten Variablen (Datenstruktur) Daten auf den EEPROM, ab Adresse 0
 
-                    // Gipsverhältnis berechnen und abspeichern
-                    gips_verhaeltnis[armposition] =
-                        (daten[armposition].gewicht[0] + daten[armposition].gewicht[1]) //  Gips Referenzgewicht + Wasser Referenzgewicht
-                        /                                                               //  dividiert durch
-                        daten[armposition].gewicht[0]                                   //  Gips Referenzgewicht
-                        ;                                                               //  Ergebnis ist Mischungsverhältnis Gips zu Gesamtmenge in Prozent
+                    // Wasser zu Gips Verhältnis berechnen und abspeichern
+
+                    h2o_gips_verhaeltnis[armposition] =
+                        daten[armposition].gewicht[1] //  Wasser Referenzgewicht
+                        /                             //  dividiert durch
+                        daten[armposition].gewicht[0] //  Gips Referenzgewicht
+                        ;                             //  Ergebnis ist Wasser zu Gips Verhältnis
 
                     min_counter = 0;                     // Minimalwert für Encoder
                     max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
@@ -681,18 +693,19 @@ void mainprogramm()
                             break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
                         } // end if (millis() - start_time < WAAGE_READY_TIME)
 
-                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;               // gemessene Grundgewicht
-                        teilgewicht_gips = daten[armposition].gewicht[Encoder_count_neu] / gips_verhaeltnis[armposition]; // berechnetes Gipsgewicht
-                        teilgewicht_h2o = daten[armposition].gewicht[Encoder_count_neu] - teilgewicht_gips;               // berechnetes Wassergewicht
+                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessenes Grundgewicht
+                      
+                        // Wassergewicht =  Gipsgewicht * h2o_gips_verhaeltnis                                                                             // Berechnung des Wassergewichtes
+                        teilgewicht_h2o = daten[armposition].gewicht[Encoder_count_neu] * h2o_gips_verhaeltnis[armposition];
                         teilgewicht_h2o_waagschale = gewicht_waagschale + teilgewicht_h2o;
 
                         gesamtgewicht =        // zu messendes Gesamtgewicht =
                             gewicht_waagschale // Eigengewicht der Waagschale
                             +                  // plus
-                            teilgewicht_gips   // Gipsgewicht
+                            daten[armposition].gewicht[Encoder_count_neu]   // Gipsgewicht
                             +                  // plus
                             teilgewicht_h2o    // Wassergewicht
-                            ;                  // Berechnung des zu messendes Gesamtgewicht
+                            ;                  // Ergebnis ist das zu messendes Gesamtgewicht
 
                         //  H2O Abfüllung beginnt ---------------------------------------
 
@@ -770,7 +783,8 @@ void mainprogramm()
                         Musik(MELODIE_FEHLER);
                         delay(LCD_TIME); // Anzeige der Fehlermeldung
 
-                        Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
+                        Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
+                        Encoder_count_alt = OUT_OF_RANGE;   // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
                     } //  end else  if (becher[armposition])
                 } // end    if (!digitalRead(I_O_PIN))
 
@@ -892,18 +906,18 @@ void mainprogramm()
                             break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
                         } // end if (millis() - start_time < WAAGE_READY_TIME)
 
-                        gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;               // gemessene Grundgewicht
-                        teilgewicht_gips = daten[armposition].gewicht[Encoder_count_neu] / gips_verhaeltnis[armposition]; // berechnetes Gipsgewicht
-                        teilgewicht_h2o = daten[armposition].gewicht[Encoder_count_neu] - teilgewicht_gips;               // berechnetes Wassergewicht                                                                                                               // berechnetes Wassergewicht
+                              // Wassergewicht =  Gipsgewicht * h2o_gips_verhaeltnis                                                                             // Berechnung des Wassergewichtes
+                        teilgewicht_h2o = daten[armposition].gewicht[Encoder_count_neu] * h2o_gips_verhaeltnis[armposition];
                         teilgewicht_h2o_waagschale = gewicht_waagschale + teilgewicht_h2o;
 
                         gesamtgewicht =        // zu messendes Gesamtgewicht =
                             gewicht_waagschale // Eigengewicht der Waagschale
                             +                  // plus
-                            teilgewicht_gips   // Gipsgewicht
+                            daten[armposition].gewicht[Encoder_count_neu]   // Gipsgewicht
                             +                  // plus
                             teilgewicht_h2o    // Wassergewicht
-                            ;                  // Berechnung des zu messendes Gesamtgewicht
+                            ;                  // Ergebnis ist das zu messendes Gesamtgewicht
+
 
                         //  H2O Abfüllung beginnt ---------------------------------------
 
@@ -981,8 +995,10 @@ void mainprogramm()
 
                         Musik(MELODIE_FEHLER);
                         delay(LCD_TIME); // Anzeige der Fehlermeldung
+                        Musik(MELODIE_FEHLER);
 
-                        Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
+                        Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
+                        Encoder_count_alt = OUT_OF_RANGE;   // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
                     } //  end else  if (becher[armposition])
                 } // end    if (!digitalRead(I_O_PIN))
 
@@ -1021,7 +1037,6 @@ void mainprogramm()
                                 //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-
                                 break; // do Schleifen Abbruch wenn Armposition sich geändert hat
                             } // end if (armposition != armposition_alt)
 
@@ -1039,14 +1054,16 @@ void mainprogramm()
 
                         Musik(MELODIE_FEHLER);
                         delay(LCD_TIME); // Anzeige der Fehlermeldung
+                        Musik(MELODIE_FEHLER);
 
-                        Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
+                        Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
+                        Encoder_count_alt = OUT_OF_RANGE;   // Erststartbedingung herstellen, LCD muss wieder beschrieben werden
                     } //  end else  if (becher[armposition])
 
                     on_off_encoder = true; // Encoder Interrupt einschalten
 
                     Encoder_count_neu = 10; //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 10
-                } // end  if (!digitalRead(I_O_PIN))
+                } // end  press_key(I_O_PIN, SCAN))
 
                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
                 break;                            //  end case 10, (POS 11 - Gipsentleerung)
@@ -1083,7 +1100,7 @@ void mainprogramm()
                             //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                            break;                            // Abbruch wenn Armposition sich geändert hat
+                            break; // Abbruch wenn Armposition sich geändert hat
                         } // end if (armposition != armposition_alt)
                         //   } while (!release_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
                     } while (press_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird

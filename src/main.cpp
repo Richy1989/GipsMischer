@@ -67,8 +67,6 @@ void setup()
 	Serial.begin(115200);    // Kommunikation zum Laptop Bildschirm 
 
 	Serial.println("jetzt gehts los"); // Text auf dem Laptop Bildschirm schreiben
-	
-delay(1000);
 
 	// Eingänge zur Armposition Erkennung:
 	pinMode(AL, INPUT_PULLUP); // Eingang Armposition LINKS, pullup
@@ -166,13 +164,13 @@ delay(1000);
 	// Adresse: anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND
 	EEPROM.get(anzahl_daten + EEPROM_ADRESSABSTAND + EEPROM_ADRESSABSTAND, Leergew_einheiten);
 
-	// Gipsverhältnis berechnen und abspeichern
+	// Wasser zu Gips Verhältnis berechnen und abspeichern
 	for (int i = 0; i < MAX_DATEN_SATZ; i++) // für jeden Datensatz, 0 bis 2 also 3 Datensätze
-		gips_verhaeltnis[i] =
-			(daten[i].gewicht[0] + daten[i].gewicht[1]) //  Gips Referenzgewicht + Wasser Referenzgewicht
-			/											//  dividiert durch
-			daten[i].gewicht[0]							//  Gips Referenzgewicht
-			;											//  Ergebnis ist Mischungsverhältnis Gips zu Gesamtmenge in Prozent
+		h2o_gips_verhaeltnis[i] =
+			daten[i].gewicht[1] //  Wasser Referenzgewicht
+			/					//  dividiert durch
+			daten[i].gewicht[0]	//  Gips Referenzgewicht
+			;					//  Ergebnis ist Wasser zu Gips Verhältnis
 
 } // end setup **********************************************************************
 
