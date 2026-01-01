@@ -28,10 +28,17 @@
 
 // #define ??? nur Ausgang (LED)      13  NU - Achtung: nur Ausgang (LED)
 
+/*
 //  Pin Definition für Eingang Arduino:3 x Hall Sensor
 #define AM 12  // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
 #define AL 11  // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
 #define AR 10  // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
+// ACHTUNG Aufpassen: Pin 10 und 11  wenig Widerstand
+*/
+//  Pin Definition für Eingang Arduino:3 x Hall Sensor
+#define AM 22  // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
+#define AL 23  // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
+#define AR 24  // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
 
 //  Pin Definition für Eingang Arduino:3 x GIPS_BECHER
 #define BL 9 // GIPS_BECHER_LINKS_PIN
@@ -295,9 +302,6 @@ extern HX711 scale;
 // Create LCD instance
 extern LiquidCrystal lcd;
 
-extern bool leer;
-extern bool voll;
-
 extern float Leergew_einheiten;
 extern float Eichgew_einheiten;
 extern float Gewicht;
@@ -369,7 +373,7 @@ extern const unsigned int anzahl_daten;
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 // extern unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	// Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-extern unsigned long h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+extern float h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
 // Array of Becher (0 bis 2) also 3 für 

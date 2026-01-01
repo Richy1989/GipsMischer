@@ -167,9 +167,9 @@ void setup()
 	// Wasser zu Gips Verhältnis berechnen und abspeichern
 	for (int i = 0; i < MAX_DATEN_SATZ; i++) // für jeden Datensatz, 0 bis 2 also 3 Datensätze
 		h2o_gips_verhaeltnis[i] =
-			daten[i].gewicht[1] //  Wasser Referenzgewicht
+			(float) daten[i].gewicht[1] //  Wasser Referenzgewicht
 			/					//  dividiert durch
-			daten[i].gewicht[0]	//  Gips Referenzgewicht
+			(float) daten[i].gewicht[0]	//  Gips Referenzgewicht
 			;					//  Ergebnis ist Wasser zu Gips Verhältnis
 
 } // end setup **********************************************************************

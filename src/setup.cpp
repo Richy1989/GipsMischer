@@ -3,9 +3,6 @@
 HX711 scale;
 LiquidCrystal lcd(RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7); // LCD Initialisierung
 
-unsigned int Anzeige_alt = 255;
-unsigned int Anzeige;
-
 float Leergew_einheiten;
 float Eichgew_einheiten;
 float Gewicht;
@@ -28,6 +25,9 @@ int min_counter = 0;
 // Arm - Positionsspeicherung
 unsigned int armposition;
 unsigned int armposition_alt;
+
+unsigned int Anzeige_alt = 255;
+unsigned int Anzeige;
 
 // steuerung des Encoder Interrupts. Nur wenn der Encoder in Funktion sein soll
 bool on_off_encoder = false;
@@ -58,7 +58,7 @@ const unsigned int anzahlrelais = sizeof(relais) / sizeof(relais[0]); // Anzahl 
 
 unsigned long start_time;
 unsigned long start_time_LED;		//  LED Blinkzeit
-unsigned long start_time_armpos;    //  Zeit zu Alarm für falsche Armposition
+unsigned long start_time_armpos;    //  Zeit zur Alarmmeldung für falsche Armposition
 
 
 // Array für die Test Routinen
@@ -140,7 +140,7 @@ const unsigned int anzahl_daten = sizeof(daten); //  Bytegröße der Variablen d
 
 //  Mischungsverhältnisse (in Prozent als 0,xxx Zahl) zur Berechnung der Teilmengen aus einer Gesamtmenge
 //  unsigned long gipsverhaeltnis[MAX_DATEN_SATZ];	 // Mischungsverhältnis Gips zu Gesamtmenge in Prozent (0,xxx Zahl)
-unsigned long h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
+float h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // unsigned long gesamtgewicht[MAX_DATEN_SATZ];	 // Gesamtgewicht Gips und Wasser der Referenzmenge
 
 // Array of Becher (0 bis 2) also 3 für 

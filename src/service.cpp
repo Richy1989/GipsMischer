@@ -3,55 +3,21 @@
 // *********  Armpositionen einlesen und in Variable armposition speichern, negative Logik ******
 void read_armposition()
 {
-	armposition = ARM_NO_POS; // 3
-
-	Serial.print("Armposition Links:  "); ///////////////////////////
-	if (!digitalRead(AL))					// Negative Logik (LOW = aktiv)
-	{
+	if (!digitalRead(AL))		 // Negative Logik (LOW = aktiv)
 		armposition = ARM_LINKS; // 0
-		Serial.println("JA");	 ///////////////////////////
-	}
 	else
-		Serial.println("NEIN"); ///////////////////////////
-
-	Serial.print("Armposition Mitte:  "); ///////////////////////////
-	if (!digitalRead(AM))					// Negative Logik (LOW = aktiv)
 	{
-		armposition = ARM_MITTE; // 1
-		Serial.println("JA");	 ///////////////////////////
-	}
-	else
-		Serial.println("NEIN"); ///////////////////////////
-
-	Serial.print("Armposition Rechts:  "); ///////////////////////////
-	if (!digitalRead(AR))					 // Negative Logik (LOW = aktiv)
-	{
-		armposition = ARM_RECHTS; // 2
-		Serial.println("JA");	  ///////////////////////////
-	}
-	else
-		Serial.println("NEIN"); ///////////////////////////
-
-			Serial.print("Armposition 0/1/2/3:  "); ///////////////////////////
-			Serial.println(armposition); ///////////////////////////
-
-			delay(750);
-	/*
-					if (!digitalRead(AL))		 // Negative Logik (LOW = aktiv)
-			armposition = ARM_LINKS; // 0
+		if (!digitalRead(AM))		 // Negative Logik (LOW = aktiv)
+			armposition = ARM_MITTE; // 1
 		else
 		{
-			if (!digitalRead(AM))		 // Negative Logik (LOW = aktiv)
-				armposition = ARM_MITTE; // 1
+			if (!digitalRead(AR))		  // Negative Logik (LOW = aktiv)
+				armposition = ARM_RECHTS; // 2
 			else
-			{
-				if (!digitalRead(AR))		  // Negative Logik (LOW = aktiv)
-					armposition = ARM_RECHTS; // 2
-		//		else
-		//			armposition = ARM_NO_POS; // 3
-			} //  end else if (!digitalRead(AM))
-		} //  end else if (!digitalRead(AL))
-		 */
+				armposition = ARM_NO_POS; // 3
+		} //  end else if (!digitalRead(AM))
+	} //  end else if (!digitalRead(AL))
+
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/
 
@@ -204,8 +170,8 @@ void Musik(int Melodie)
 		break;
 
 	case MELODIE_TON_1000:
-		tone(TONE_PIN, 1000, 250); // 1000 Hz
-								   //	delay(200);
+		tone(TONE_PIN, 1000, 1000); // 1000 Hz, 1000 ms
+		delay(100);
 		noTone(TONE_PIN);
 		break;
 
@@ -833,7 +799,7 @@ void service()
 													//						lcd.setCursor(0, 1);	// Setz Curser auf Charakter 1, Zeile 2
 													//						lcd.print(relais[Encoder_count_neu]);
 
-							digitalWrite(relais[Encoder_count_neu], EIN); // Relais einschalten, Verkehrte Logik: LOW = EIN, HIGH = AUS
+							digitalWrite(relais[Encoder_count_neu], EIN); // Relais einschalten, negative Logik: LOW = EIN, HIGH = AUS
 
 							while (!digitalRead(ENTER_PIN) && digitalRead(I_O_PIN)) // warten bis Enter taste losgelasen
 							{
