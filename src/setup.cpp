@@ -176,7 +176,7 @@ byte cursor[8] = { // erstellt Zeichen Cursor --> Nr.: 2
 	B11000,
 	B10000};
 
-byte rechteck[8] = { // erstellt Zeichen Rechteck --> Nr.: 3
+byte rechteck_umrahmung[8] = { // erstellt Zeichen Rechteck --> Nr.: 3
 	B11111,
 	B10001,
 	B10001,

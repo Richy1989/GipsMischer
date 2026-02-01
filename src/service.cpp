@@ -17,7 +17,26 @@ void read_armposition()
 				armposition = ARM_NO_POS; // 3
 		} //  end else if (!digitalRead(AM))
 	} //  end else if (!digitalRead(AL))
-
+/*
+	Serial.print("Armposition: ");
+	switch (armposition)
+	{
+	case ARM_LINKS:
+		Serial.println("LINKS: "); ///////////////////////////
+		break;
+	case ARM_MITTE:
+		Serial.println("MITTE: "); ///////////////////////////
+		break;
+	case ARM_RECHTS:
+		Serial.println("RECHTS: "); ///////////////////////////
+		break;
+	case ARM_NO_POS:
+		Serial.println("ARM_NO_POS: "); ///////////////////////////
+		break;
+	default:
+		break;
+	}  //  end switch (armposition)
+*/
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/
 
@@ -36,6 +55,7 @@ void read_becher()
 
 	if (!digitalRead(BR))	   // Negative Logik (LOW = aktiv)
 		becher[2] = BECHER_OK; // Becher RECHTS
+
 } //  end read_becher()
 /****************************    Ende read_becher() 	********************************/
 
@@ -171,7 +191,7 @@ void Musik(int Melodie)
 
 	case MELODIE_TON_1000:
 		tone(TONE_PIN, 1000, 1000); // 1000 Hz, 1000 ms
-		delay(100);
+		delay(500);
 		noTone(TONE_PIN);
 		break;
 

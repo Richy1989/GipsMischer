@@ -148,7 +148,7 @@ void setup()
 	lcd.createChar(SMILEY, smiley);		// erstelltes Zeichen Smiley
 	lcd.createChar(HERZ, herz);			// erstelltes Zeichen Herz
 	lcd.createChar(CURSOR, cursor);		// erstelltes Zeichen Cursor
-	lcd.createChar(RECHTECK, rechteck); // erstelltes Zeichen Rechteck
+	lcd.createChar(RECHTECK_UMRAHMUNG, rechteck_umrahmung); // erstelltes Zeichen Rechteck
 
 	// Liest die Datenstruktur aus dem EEPROM
 	EEPROM.get(0, daten); // Lesen ab der Adresse 0 aus dem EEPROM

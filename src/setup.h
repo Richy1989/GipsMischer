@@ -270,7 +270,13 @@
 #define SMILEY 0
 #define HERZ 1
 #define CURSOR 2
-#define RECHTECK 3
+#define RECHTECK_UMRAHMUNG 3
+
+// H2O läuft nach Pumpen- und Ventilausschaltung um ca. 10 ml nach - unklare Situation
+#define H2O_NACHLAUFKORREKTUR 8
+
+// maximale Charakteranzahl für LCD Fortschrittsanzeige
+#define FORTSCHRITTCHARAKTERS 9
 
 // Vordefinierte Gips FIX Gewichte bei Armposition Links und Rechts
 #define FIXGEWICHT_01 130
@@ -288,6 +294,8 @@
 #define WAIT 1
 #define TASTE_KOMPLETT 2
 
+// Charakter für die LCD Fortschrittsanzeige
+#define RECHTECK_AUSGEFUELLT 255
 
 /******************************************
  *      KONSTANTEN DEFINITIONEN  Ende      *
@@ -382,7 +390,7 @@ extern unsigned int becher[BECHER_ANZAHL];
 extern byte smiley[8];	 // erstellt Zeichen Smiley
 extern byte herz[8];	 // erstellt Zeichen Herz
 extern byte cursor[8];	 // erstellt Zeichen Cursor
-extern byte rechteck[8]; // erstellt Zeichen Rechteck
+extern byte rechteck_umrahmung[8]; // erstellt Zeichen "umrahmtes Rechteck"
 
 /******************************************
  *      VARIABLEN DEFINITIONEN  Ende        *
