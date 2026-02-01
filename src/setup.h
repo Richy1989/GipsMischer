@@ -15,7 +15,7 @@
 //  LCD Anzeige
 //  Library von arduino-libraries
 
-#include <EEPROM.h>
+ #include <EEPROM.h>
 // #include "IO.h"
 // #include "service.h"
 /******************************************
@@ -26,72 +26,58 @@
  *      HARDWARE DEFINITIONEN  Anfang        *
  *******************************************/
 
+// Pin Definition für NU - Mot Used
 // #define ??? nur Ausgang (LED)      13  NU - Achtung: nur Ausgang (LED)
+// #define ???                        12 // NU
+// #define ???                        11 // NU
+// #define ???                        10 // NU
 
-/*
-//  Pin Definition für Eingang Arduino:3 x Hall Sensor
-#define AM 12  // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
-#define AL 11  // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
-#define AR 10  // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
-// ACHTUNG Aufpassen: Pin 10 und 11  wenig Widerstand
-*/
-//  Pin Definition für Eingang Arduino:3 x Hall Sensor
-#define AM 22  // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
-#define AL 23  // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
-#define AR 24  // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
-
-//  Pin Definition für Eingang Arduino:3 x GIPS_BECHER
+// Pin Definition für Eingang Arduino:3 x GIPS_BECHER
 #define BL 9 // GIPS_BECHER_LINKS_PIN
 #define BM 8 // GIPS_BECHER_MITTE_PIN
 #define BR 7 // GIPS_BECHER_RECHTS_PIN
 
-//  Pin Definition für NU
+// Pin Definition für NU - Mot Used
 // #define ???                        6 // NU
 // #define ???                        5 // NU
 
-//  Pin Definition für Ausgang Piepser Arduino
+// Pin Definition für Ausgang Piepser Arduino
 #define TONE_PIN 4 // Ausgang für Buzzer, Piezo Lautsprecher
 
-//  Pin Definition für ENCODER unten
-// #define ???                        3  // ENCODER_A
-// #define ???                        2  // ENCODER_B
+// Pin Definition weiter unten bei 46, 47
+// #define ENCODER_A 3
+// #define ENCODER_B 2
 
-//  Pin Definition für NU
 // #define ???						  1  // NU - Achtung: TXD0
 // #define ???                        0  // NU - Achtung: RXD0
 
-//  Pin Definition für Ausgang LED Frontanzeige Arduino:3 x LED
+// Pin Definition für Ausgang LED Frontanzeige Arduino:3 x LED
 #define LL 14 // Ausgang Front LED LINKS
 #define LM 15 // Ausgang Front LED MITTE
 #define LR 16 // Ausgang Front LED RECHTS
 
-//  Pin Definition für NU
+// Pin Definition für NU
 // #define ???                        17 // NU
 
-// Define rotary encoder pins (Arduino Mega 2560: Pins 2, 3, 18, 19, 20, 21 möglich)
-// Pin Definition für Encoder mit Stützpunkten vom Flachbandkabel
-#define ENCODER_A 3	   // Eingang pullup, Interrupt 5 (Anzeigeprint FlBaKa Pin 17)
-#define LCD_BASE_46 46 // Stützbunkt bei 20 poligem Stecker (Pin 46), Brücke zu Arduino Pin 2
-
-#define ENCODER_B 2	   // Eingang pullup, Interrupt 4 (Anzeigeprint FlBaKa Pin 18)
-#define LCD_BASE_47 47 // Stützbunkt bei 20 poligem Stecker (Pin 47), Brücke zu Arduino Pin 3
-
-//  Pin Definition für Interrupt Reserve
+// Pin Definition für Interrupt Reserve
 #define INTERRUPT_RESERVE1 18 // Interrupt 3
 #define INTERRUPT_RESERVE2 19 // Interrupt 2
 
-//  Waage: Pin Definition für den I2C Bus bei HX711 (Interruptfähige Eingänge)
+// Waage: Pin Definition für den I2C Bus bei HX711 (Interruptfähige Eingänge)
 #define DATA_PIN 20
 #define CLOCK_PIN 21
 
-//  Pin Definition für NU
+// Pin Definition für NU
 // #define ???                        22 // NU
 // #define ???                        23 // NU
 // #define ???                        24 // NU
 // #define ???                        25 // NU
-// #define ???                        26 // NU
-// #define ???                        27 // NU
-// #define ???                        28 // NU
+
+// Pin Definition für Eingang Arduino:3 x Hall Sensor
+#define AM 26 // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
+#define AL 27 // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
+#define AR 28 // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
+
 // #define ???                        29 // NU
 
 // Anfang Flachbandkabel 20 Pin zur Bedieneinheit
@@ -113,48 +99,59 @@
 					   // Stützbunkt bei 20 poligem Stecker (Pin 43), Brücke zu Pot für LCD Kontrasteinstellung
 #define I_O_PIN 44	   // Eingang pullup, Pin Definition für die Taste: I/O (Anzeigeprint FlBaKa Pin 15)
 #define ENTER_PIN 45   // // Eingang pullup, Pin Definition für die Taste: Enter (Anzeigeprint FlBaKa Pin 16)
-// #define LCD_BASE_46                46 // Stützbunkt bei 20 poligem Stecker (Pin 46), Brücke zu Arduino Pin 19
-// #define LCD_BASE_47                47 // Stützbunkt bei 20 poligem Stecker (Pin 47), Brücke zu Arduino Pin 18
+
+// Define rotary encoder pins (Arduino Mega 2560: Pins 2, 3, 18, 19, 20, 21 möglich)
+// Pin Definition für Encoder mit Stützpunkten vom Flachbandkabel
+#define ENCODER_A 3	   // Eingang pullup, Interrupt 5 (Anzeigeprint FlBaKa Pin 17)
+#define LCD_BASE_46 46 // Stützbunkt bei 20 poligem Stecker (Pin 46), Brücke zu Arduino Pin 3
+
+#define ENCODER_B 2	   // Eingang pullup, Interrupt 4 (Anzeigeprint FlBaKa Pin 18)
+#define LCD_BASE_47 47 // Stützbunkt bei 20 poligem Stecker (Pin 47), Brücke zu Arduino Pin 2
+
 #define LCD_BASE_48 48 // Eingang pullup GND (Anzeigeprint FlBaKa Pin 19)
 					   // Stützbunkt bei 20 poligem Stecker (Pin 48), Brücke zu GND
 #define LCD_BASE_49 49 // Eingang pullup GND (Anzeigeprint FlBaKa Pin 20)
 					   // Stützbunkt bei 20 poligem Stecker (Pin 20), Brücke zu GND
 					   // Ende Flachbandkabel 20 Pin zur Bedieneinheit
 
-//  Pin Definition für NU
+// Pin Definition für NU
 // #define ???                        50 // NU
 // #define ???                        51 // NU
 // #define ???                        52 // NU
 // #define ???                        53 // NU
 
-// #define ???                        A15 // NU
-// #define ???                        A14 // NU
-// #define ???                        A13 // NU
-// #define ???                        A12 // NU
+// Anfang Flachbandkabel 20 Pin zur Relaiskarte ---------------------------------------------
+// Ausgänge Pin Definition für Relais Ausgangskarte (24 VDC): 3 x GIPS_MOTOR, 3 x WASSER_VENTIL, 1 x Wasserpumpe
+// Ausgänge Pin Definition für Relais Ausgangskarte (24 VAC): 3 x GIPS_RUETTLER
+#define RELAIS_VL A15 // WASSER_VENTIL_LINKS_PIN;  FlBaKa Pin 17 / Relais 15
+#define RELAIS_RM A14 // GIPS_RUETTLER_MITTE_PIN;  FlBaKa Pin 15 / Relais 13
+#define RELAIS_VR A13 // WASSER_VENTIL_RECHTS_PIN; FlBaKa Pin 13 / Relais 11
+#define RELAIS_WP A12 // WASSER_PUMPEN_PIN; FlBaKa Pin 3 / Relais 1
 
-// Anfang Flachbandkabel 20 Pin zur Relaiskarte
-//  Ausgänge Pin Definition für Relais Ausgangskarte (24 VDC): 3 x GIPS_MOTOR, 3 x WASSER_VENTIL, 1 x Wasserpumpe
-//  Ausgänge Pin Definition für Relais Ausgangskarte (24 VAC): 3 x GIPS_RUETTLER
-#define RELAIS_VL A15			 // WASSER_VENTIL_LINKS_PIN; FlBaKa Pin 17 / Relais 15
-#define RELAIS_RM A14			 // GIPS_RUETTLER_MITTE_PIN; FlBaKa Pin 15 / Relais 13
-#define RELAIS_VR A13			 // WASSER_VENTIL_RECHTS_PIN; FlBaKa Pin 13 / Relais 11
-#define RELAIS_WP /*defekt*/ A12 // WASSER_PUMPEN_PIN; FlBaKa Pin 3 / Relais 1
-// #define defekt                     A11// WASSER_VENTIL_RECHTS_PIN; FlBaKa Pin 11 / Relais 9
+// #define ???    A11 // NU
+
 #define RELAIS_VM A10 // WASSER_VENTIL_MITTE_PIN; FlBaKa Pin 9 / Relais 7
-#define RELAIS_ML A8  // GIPS_MOTOR_LINKS_PIN; FlBaKa Pin 4 / Relais 2
-#define RELAIS_MM A7  // GIPS_MOTOR_MITTE_PIN; FlBaKa Pin 5 / Relais 3
-#define RELAIS_MR A6  // GIPS_MOTOR_RECHTS_PIN; FlBaKa Pin 7 / Relais 5
-// #define defekt                    A5 // WASSER_PUMPE_PIN; FlBaKa Pin 10 / Relais 8
-#define RELAIS_RL A4 // GIPS_RUETTLER_LINKS_PIN; FlBaKa Pin 12 / Relais 10
-// #define defekt                    A3 // GIPS_RUETTLER_MITTE_PIN; FlBaKa Pin 14 / Relais 12
-#define RELAIS_RR A2 // GIPS_RUETTLER_RECHTS_PIN; FlBaKa Pin 16 / Relais 14
-// #define defekt                    A1 // WASSER_VENTIL_LINKS_PIN; FlBaKa Pin 18 / Relais 16
 
-#define AUSGANG_9 A9 // Eingang A9 pullup VCC (Anzeigeprint FlBaKa Pin 1 und 2)
-					 // Stützbunkt bei 20 poligem Stecker (Pin 1 und 2), Brücke zu Vcc
-#define AUSGANG_0 A0 // Eingang A0 pullup GND (Anzeigeprint FlBaKa Pin 19 und 20)
-					 // Stützbunkt bei 20 poligem Stecker (Pin 19 und 20), Brücke zu GND
-// Ende Flachbandkabel 20 Pin zur Relaiskarte
+#define AUSGANG_9 A9  // Eingang A9 pullup VCC (Anzeigeprint FlBaKa Pin 1 und 2) !!!!!!!!!!!!!!!
+					  // Stützbunkt bei 20 poligem Stecker (Pin 1 und 2), Brücke zu Vcc !!!!!!!!
+
+#define RELAIS_ML A8  // GIPS_MOTOR_LINKS_PIN;  FlBaKa Pin 4 / Relais 2
+#define RELAIS_MM A7  // GIPS_MOTOR_MITTE_PIN;  FlBaKa Pin 5 / Relais 3
+#define RELAIS_MR A6  // GIPS_MOTOR_RECHTS_PIN; FlBaKa Pin 7 / Relais 5
+
+// #define ???    A5 // NU
+
+#define RELAIS_RL A4 // GIPS_RUETTLER_LINKS_PIN; FlBaKa Pin 12 / Relais 10
+
+// #define ???    A3 // NU
+
+#define RELAIS_RR A2 // GIPS_RUETTLER_RECHTS_PIN; FlBaKa Pin 16 / Relais 14
+
+// #define ???    A1 // NU
+
+#define AUSGANG_0 A0 // Eingang A0 pullup GND (Anzeigeprint FlBaKa Pin 19 und 20) !!!!!!!!!!!!!!
+					 // Stützbunkt bei 20 poligem Stecker (Pin 19 und 20), Brücke zu GND !!!!!!!
+// Ende Flachbandkabel 20 Pin zur Relaiskarte ---------------------------------------------
 
 /******************************************
  *      HARDWARE DEFINITIONEN  Ende        *
@@ -235,15 +232,15 @@
 #define MAX_GEWICHT_EINGABE 2000
 
 // Wartezeit in ms
-#define WAIT_TIME_LED 1000	  // LED Einschalt- Lauflichtzeit in der Serviceroutine
-#define WAIT_TIME_LED_II 333  // LED Alarmblinkzeit bei keiner definierten Armposition
+#define WAIT_TIME_LED 1000		 // LED Einschalt- Lauflichtzeit in der Serviceroutine
+#define WAIT_TIME_LED_II 333	 // LED Alarmblinkzeit bei keiner definierten Armposition
 #define WAIT_TIME_ARM_ALARM 3000 // nach dieser Zeit erfolgt ein akustischer Fehleralarm bei keiner definierten Armposition
-#define WAIT_TIME_2 3000	  // ersten 3 Sekunden anzeige
-#define WAIT_TIME_3 6000	  // zweiten 3 Sekunden anzeige
-#define WAIT_TIME_4 9000	  // dritten 3 Sekunden anzeige
-#define ENTPRELL_ZEIT 4		  // Tastaturentprellzeit in ms
-#define WAAGE_READY_TIME 3000 // Wartezeit bis die Waage bereit ist in ms
-#define LCD_TIME 3000         // Fehler Anzeigezeit am LCD in ms
+#define WAIT_TIME_2 3000		 // ersten 3 Sekunden anzeige
+#define WAIT_TIME_3 6000		 // zweiten 3 Sekunden anzeige
+#define WAIT_TIME_4 9000		 // dritten 3 Sekunden anzeige
+#define ENTPRELL_ZEIT 4			 // Tastaturentprellzeit in ms
+#define WAAGE_READY_TIME 3000	 // Wartezeit bis die Waage bereit ist in ms
+#define LCD_TIME 3000			 // Fehler Anzeigezeit am LCD in ms
 
 // Benennung der Service Test Routinen
 #define EEPROM_TEST 0
@@ -353,7 +350,7 @@ extern const unsigned int relais[];
 extern const unsigned int anzahlrelais;
 
 extern unsigned long start_time;
-extern unsigned long start_time_LED; 	//  LED Blinkzeit
+extern unsigned long start_time_LED;	//  LED Blinkzeit
 extern unsigned long start_time_armpos; //  Zeit zu Alarm für falsche Armposition
 
 //  Array für die Test Routinen
@@ -384,12 +381,12 @@ extern const unsigned int anzahl_daten;
 extern float h2o_gips_verhaeltnis[MAX_DATEN_SATZ]; // Mischungsverhältnis Wasser zu Gesamtmenge in Prozent (0,xxx Zahl)
 // extern unsigned long gesamtgewicht[MAX_DATEN_SATZ];	// Gesamtgewicht Gips und Wasser der Referenzmenge
 
-// Array of Becher (0 bis 2) also 3 für 
+// Array of Becher (0 bis 2) also 3 für
 extern unsigned int becher[BECHER_ANZAHL];
 
-extern byte smiley[8];	 // erstellt Zeichen Smiley
-extern byte herz[8];	 // erstellt Zeichen Herz
-extern byte cursor[8];	 // erstellt Zeichen Cursor
+extern byte smiley[8];			   // erstellt Zeichen Smiley
+extern byte herz[8];			   // erstellt Zeichen Herz
+extern byte cursor[8];			   // erstellt Zeichen Cursor
 extern byte rechteck_umrahmung[8]; // erstellt Zeichen "umrahmtes Rechteck"
 
 /******************************************
