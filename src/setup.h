@@ -74,9 +74,16 @@
 // #define ???                        25 // NU
 
 // Pin Definition für Eingang Arduino:3 x Hall Sensor
-#define AM 26 // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
+#define AR 23 // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
+#define AL 25 // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
+#define AM 24 // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
+
+/*
+// Pin Definition für Eingang Arduino:3 x Hall Sensor
+#define AR 26 // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
 #define AL 27 // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
-#define AR 28 // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
+#define AM 28 // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
+*/
 
 // #define ???                        29 // NU
 
@@ -269,11 +276,18 @@
 #define CURSOR 2
 #define RECHTECK_UMRAHMUNG 3
 
-// H2O läuft nach Pumpen- und Ventilausschaltung um ca. 10 ml nach - unklare Situation
-#define H2O_NACHLAUFKORREKTUR 8
+// H2O läuft nach Pumpen- und Ventilausschaltung um ca. 2 ml nach - unklare Situation
+#define H2O_NACHLAUFKORREKTUR 2
 
 // maximale Charakteranzahl für LCD Fortschrittsanzeige
 #define FORTSCHRITTCHARAKTERS 9
+
+// Anzahl der Waagezyklen
+#define WAAGEZYKLEN_2  2
+#define WAAGEZYKLEN_3  3
+#define WAAGEZYKLEN_5  5
+#define WAAGEZYKLEN_10 10
+
 
 // Vordefinierte Gips FIX Gewichte bei Armposition Links und Rechts
 #define FIXGEWICHT_01 130

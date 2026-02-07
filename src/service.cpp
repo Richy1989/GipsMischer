@@ -17,7 +17,7 @@ void read_armposition()
 				armposition = ARM_NO_POS; // 3
 		} //  end else if (!digitalRead(AM))
 	} //  end else if (!digitalRead(AL))
-/*
+
 	Serial.print("Armposition: ");
 	switch (armposition)
 	{
@@ -36,7 +36,7 @@ void read_armposition()
 	default:
 		break;
 	}  //  end switch (armposition)
-*/
+
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/
 
@@ -881,7 +881,7 @@ void service()
 							//	Musik(MELODIE_OK);
 
 							lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-							lcd.print("warten programm");
+							lcd.print("warten Programm.");
 
 							//  erstmalige Dateneingabe initialisieren
 							for (int i = 0; i < ARM_ANZAHL; i++) // 0 bis 2 Arm (3 Arme)

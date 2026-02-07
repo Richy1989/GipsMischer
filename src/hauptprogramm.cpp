@@ -103,7 +103,7 @@ void greeting()
 
         // Laufschrift zur Begrüßung:
         // *   Zahntechnik  * *   powered by   *  *    Richard     *
-        // *    Obwegeser  *  *V-1.00 :Jan 2026*  *    LEOPOLD     *
+        // *    Obwegeser  *  *V-1.00 :Feb 2026*  *    LEOPOLD     *
 
         if (millis() - start_time < WAIT_TIME_2) // Anzeige der ersten 3 Sekunden
         {
@@ -119,7 +119,7 @@ void greeting()
                 lcd.setCursor(0, 0); // Setz Curser auf Charakter 1, Zeile 2
                 lcd.print("   powered by   ");
                 lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-                lcd.print("V-1.00 :Jan 2026");
+                lcd.print("V-1.00 :Feb 2026");
             } // end else...if (delta_time < WAIT_TIME_3)
             else if (millis() - start_time < WAIT_TIME_4) // Anzeige der dritten 3 Sekunden
             {
@@ -149,15 +149,55 @@ int edit_cursor_start(char buchstabe)
 } //  end cursor_start()
 ///////////////////////////////////// Ende cursor_start  ///////////////////////////////////////////
 
-//////////////////////////////////////// Beginn gewichtsanzeige ///////////////////////////////////////////
-void gewichtsanzeige(int aktuelles_gewicht)
+///////////////////////////////////// Beginn waage_bereit ///////////////////////////////////////////
+boolean waage_bereit()
 {
-    // Gewichtsanzeige auf Curserposition 12 bis 15 (also 4 Stellen)
-    lcd.setCursor(12, 1);         // Setz Curser auf Charakter 13, Zeile 2
-    lcd.write("    ");            // 4 Chatakters löschen
-    lcd.setCursor(12, 1);         // Setz Curser auf Charakter 13, Zeile 2
-    lcd.write(aktuelles_gewicht); // Gewicht mit 4 Chatakters auf LCD schreiben
-} // end LCD_fortschtitt(float prozent)
+    start_time = millis();
+
+    while (scale.is_ready()) // scale.is_ready --> Waage ist bereit wenn false
+        if (millis() - start_time > WAAGE_READY_TIME)
+            break; // while (scale.is_ready()) ... Abbruch da Wartezeit auf Waage ready zu lange, eventuell Waage defekt
+
+    if (millis() - start_time > WAAGE_READY_TIME) // WAAGE_READY_TIME)
+    {                                             //  Abbruch da Wartezeit auf Waage ready zu lange, eventuell Waage defekt
+        lcd.setCursor(3, 1);                      // Setz Curser auf Charakter 4, Zeile 2
+        lcd.print("Waage defekt!");
+
+        Musik(MELODIE_FEHLER);
+        delay(LCD_TIME); // Anzeige der Fehlermeldung
+        return (false);
+    } // Waage ist NICHT bereit
+
+    return (true); // Waage ist bereit
+} // end  waage_bereit
+///////////////////////////////////// Ende waage_bereit  ///////////////////////////////////////////
+
+//////////////////////////////////////// Beginn gewichtsanzeige ///////////////////////////////////////////
+void gewichtsanzeige(unsigned int aktuelles_gewicht)
+{
+    // Gewichtsanzeige rechtsbündig auf Curserposition 12 bis 15 (also 4 Stellen)
+    lcd.setCursor(12, 1); // Setz Curser auf Charakter 13, Zeile 2
+    lcd.print("    ");    // 4 Chatakters löschen
+                          //   lcd.setCursor(12, 1);         // Setz Curser auf Charakter 13, Zeile 2
+                          //   lcd.print(aktuelles_gewicht); // Gewicht mit 4 Chatakters auf LCD schreiben
+
+    if (aktuelles_gewicht < 10)
+        lcd.setCursor(15, 1); // Setz Curser auf Charakter 15, Zeile 2 / 1 Chaakter auf LCD schreiben
+    else
+    {
+        if (aktuelles_gewicht < 100)
+            lcd.setCursor(14, 1); // Setz Curser auf Charakter 14, Zeile 2 / "2" Chaakter auf LCD schreiben
+        else
+        {
+            if (aktuelles_gewicht < 1000)
+                lcd.setCursor(13, 1); // Setz Curser auf Charakter 13, Zeile 2  / "3" Chaakter auf LCD schreiben
+            else
+                lcd.setCursor(12, 1); // Setz Curser auf Charakter 13, Zeile 2 / "4" Chaakter auf LCD schreiben
+        } //  end else  if (aktuelles_gewicht < 100)
+    } //  end else  if (aktuelles_gewicht < 10)
+
+    lcd.print(aktuelles_gewicht); // Gewicht mit max 4 Chatakters rechtsbündig auf LCD schreiben
+} // end  gewichtsanzeige(unsigned int aktuelles_gewicht)
 //////////////////////////////////////// Ende gewichtsanzeige ///////////////////////////////////////////
 
 //////////////////////////////////////// Beginn LCD_fortschtitt ///////////////////////////////////////////
@@ -191,6 +231,7 @@ void mainprogramm()
     int LCD_cursor_position;                      // Curserposition auf dem LCD (3 bis 16)
     bool write_to_LCD[MAX_CURSOR_POSITIONEN + 1]; // 0 bis 11, 12 Positionen, damit immer nur einmalig auf den LCD geschrieben wird
     int LED_pointer;                              // LED Adressierung im no Arm Positions Alarmfall
+    bool ersteintritt = true;
 
     greeting(); // Programmsart und Entscheidung: Serviceroutine oder Hauptprogramm
 
@@ -295,7 +336,8 @@ void mainprogramm()
             min_counter = 0;                     // Minimalwert für Encoder
             max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
 
-            Encoder_count_neu = min_counter;  // Start mit Zeile 0 (Überschrift)
+            //       Encoder_count_neu = min_counter;  // Start mit Zeile 0 (Überschrift)
+            //  -->  Encoder_count_neu bleibt unverändert, Verbleib im Menü case 0 bis 11
             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
             Encoder_count_store = OUT_OF_RANGE;
 
@@ -429,6 +471,8 @@ void mainprogramm()
                 {
                     write_to_LCD[i] = true; // damit immer nur einmalig auf den LCD geschrieben wird
                 } // end for (int i = 0; i <= MAX_CURSOR_POSITIONEN; i++)
+
+                ersteintritt = true;  //  für Waageprüfung in "11 Gips Entleerung" und "12 H2O Entleerung"
             }
 
             Encoder_count_alt = Encoder_count_neu;
@@ -691,26 +735,14 @@ void mainprogramm()
 
                     if (becher[armposition]) //  Becher der Armposition ist vorhanden
                     {
-                        start_time = millis();
-
-                        while (scale.is_ready()) // scale.is_ready --> Waage ist bereit wenn true
-                            if (millis() - start_time > WAAGE_READY_TIME)
-                                break; // while () ... Abbruch da Wartezeit auf Waage ready zu lange, eventuell Waage defekt
-
-                        if (millis() - start_time > WAAGE_READY_TIME) // WAAGE_READY_TIME)
-                        {                                             //  Abbruch da Wartezeit auf Waage ready zu lange, eventuell Waage defekt
-                            lcd.setCursor(3, 1);                      // Setz Curser auf Charakter 4, Zeile 2
-                            lcd.print("Waage defekt!");
-
-                            Musik(MELODIE_FEHLER);
-                            delay(LCD_TIME); // Anzeige der Fehlermeldung
-
+                        if (!waage_bereit())
+                        {                                       //  Waage ist NICHT bereit
                             Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
                             //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                             break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
-                        } // end if (millis() - start_time < WAAGE_READY_TIME)
+                        } // end  if (!waage_bereit())
 
                         gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessenes Grundgewicht
 
@@ -743,17 +775,6 @@ void mainprogramm()
 
                         //  H2O Abfüllung beginnt ---------------------------------------
 
-                        /*
-                        lcd.setCursor(3, 1);
-                        lcd.print("             "); // löschen der Zeile
-                        lcd.setCursor(3, 1);
-                        lcd.print(gewicht_waagschale); // 5 Stellen
-                        lcd.setCursor(9, 1);
-                        lcd.print((unsigned int)teilgewicht_h2o); // max. 3 Stellen
-                        lcd.setCursor(13, 1);
-                        lcd.print(daten[armposition].gewicht[Encoder_count_neu]); // 3 Stellen
-                        */
-
                         digitalWrite(relais[armposition + 6], EIN); // Relais H2O-Ventil [ARM Position] einschalten
                         digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
 
@@ -770,27 +791,41 @@ void mainprogramm()
                                 //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                                break; // Abbruch wenn Armposition sich geändert hat
-                            } // end if (armposition != armposition_alt)
+                                break; // Abbruch wenn Armposition sich geändert hat oder I/O Taste gedrückt wurde
+                            } // end if (armposition != armposition_alt || press_key(I_O_PIN, SCAN))
 
-                            // Differenz der Gewichtseinheit minus der Leereinheitdurch,
-                            // Dividiert Korrekturfaktor
-                            Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+                            // Differenz der Gewichtseinheit minus der Leereinheit
+                            // dividiert durch deb Korrekturfaktor
+                            Gewicht = (scale.read_average(WAAGEZYKLEN_5) - Leergew_einheiten) / Korrekturfaktor;
 
-                            //  Anzeige ersetzt
-                            //  LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
+                            LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
 
                         } while ((Gewicht + H2O_NACHLAUFKORREKTUR) < teilgewicht_h2o_waagschale); // Auf Wassergewicht prüfen (inklusive Waagschalen Gewicht)
 
                         digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
 
+                        //  Damit eine stabile Gewichtsangabe am LCD steht
+                        Gewicht = (scale.read_average(WAAGEZYKLEN_5) - Leergew_einheiten) / Korrekturfaktor;
+                        LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
+
                         Serial.print("Gewicht Waagschale + H2O gemessen: "); ///////////////////////////
                         Serial.println(Gewicht);                             ///////////////////////////
 
                         Musik(MELODIE_TON_1000); // Kurzer Signalton zum Ende der Wasserabfüllung
 
+                        delay(5000);
+
                         //  Gips Abfüllung beginnt ---------------------------------------
+
+                        if (!waage_bereit())
+                        {                                       //  Waage ist NICHT bereit
+                            Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
+
+                            break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
+                        } // end  if (!waage_bereit())
 
                         digitalWrite(relais[armposition], EIN);     // Relais Gipsmotor [ARM Position] einschalten
                         digitalWrite(relais[armposition + 3], EIN); // Relais Rüttler [ARM Position] einschalten
@@ -808,22 +843,22 @@ void mainprogramm()
                                 //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                                 Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
-                                break; // Abbruch wenn Armposition sich geändert hat
-                            } // end if (armposition != armposition_alt)
-
-                            // Waage wird nicht auf Funtionsfähigkeit überprüft,
-                            // da dies bereits vor der Gipsabfüllung erfolgte
+                                break; // Abbruch wenn Armposition sich geändert hat oder I/O Taste gedrückt wurde
+                            } // end if (armposition != armposition_alt || press_key(I_O_PIN, SCAN))
 
                             // Differenz der Gewichtseinheit minus der Leereinheitdurch,
-                            // Dividiert Korrekturfaktor
-                            Gewicht = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor;
+                            // dividiert durch den Korrekturfaktor
+                            Gewicht = (scale.read_average(WAAGEZYKLEN_3) - Leergew_einheiten) / Korrekturfaktor;
 
-                            //  Anzeige ersetzt
-                            // LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
+                            LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
                         } while ((Gewicht + H2O_NACHLAUFKORREKTUR) < gesamtgewicht); // Auf Gipsgewicht + Wassergewicht + Waagschale prüfen
 
                         digitalWrite(relais[armposition + 3], AUS); // Relais Rüttler [ARM Position] ausschalten
                         digitalWrite(relais[armposition], AUS);     // Relais Gipsmotor [ARM Position] ausschalten
+
+                        //  Damit eine stabile Gewichtsangabe am LCD steht
+                        Gewicht = (scale.read_average(WAAGEZYKLEN_3) - Leergew_einheiten) / Korrekturfaktor;
+                        LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
 
                         Serial.print("Gewicht Waagschale + H2O + Gips gemessen: "); ///////////////////////////
                         Serial.println(Gewicht);
@@ -943,26 +978,14 @@ void mainprogramm()
 
                     if (becher[armposition]) //  Becher der Armposition ist vorhanden
                     {
-                        start_time = millis();
-
-                        while (scale.is_ready()) // scale.is_ready --> Waage ist bereit wenn true
-                            if (millis() - start_time > WAAGE_READY_TIME)
-                                break; // while (scale.is_ready()) ... Abbruch da Wartezeit auf Waage ready zu lange, eventuell Waage defekt
-
-                        if (millis() - start_time > WAAGE_READY_TIME) // WAAGE_READY_TIME)
-                        {                                             //  Abbruch da Wartezeit auf Waage ready zu lange, eventuell Waage defekt
-                            lcd.setCursor(3, 1);                      // Setz Curser auf Charakter 4, Zeile 2
-                            lcd.print("Waage defekt!");
-
-                            Musik(MELODIE_FEHLER);
-                            delay(LCD_TIME); // Anzeige der Fehlermeldung
-
+                        if (!waage_bereit())
+                        {                                       //  Waage ist nicht bereit
                             Encoder_count_store = OUT_OF_RANGE; // LCD Grundanzeige wieder herstellen
                             //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                             break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
-                        } // end if (millis() - start_time < WAAGE_READY_TIME)
+                        } // end  if (!waage_bereit())
 
                         gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessenes Grundgewicht
 
@@ -1030,8 +1053,7 @@ void mainprogramm()
                             // Abzüglich des Eigengewicht der Waagscghale
                             Gewicht = ((scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor); // Messung Gewicht Gips + Gewicht Waagschale
 
-                            //  Anzeige ersetzt
-                            //  LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
+                            LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
                         } while ((Gewicht + H2O_NACHLAUFKORREKTUR) < teilgewicht_h2o_waagschale); // Auf Wasergewicht prüfen (inklusive Waagschalen Gewicht)
 
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
@@ -1107,9 +1129,19 @@ void mainprogramm()
                 if (write_to_LCD[10])
                 {
                     lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-                    lcd.print("11 GIPS Ent ----");
+                    lcd.print("11 GIPS Ler ----");
                     lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
                     lcd.write(byte(CURSOR));
+
+                    if (!waage_bereit())
+                    { //  Waage ist nicht bereit
+                      //  Anzeige wieder herstellen
+                        lcd.print("11 GIPS Ler xxxx");
+                        lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
+                        lcd.write(byte(CURSOR));
+
+                        break; //  case 2 - 5 Abbruch, (POS 03 - 06 - Gipsgewicht fix immer um 160/130 g erhöht)
+                    } // end  if (!waage_bereit())
 
                     gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessenes Grundgewicht
 
@@ -1123,8 +1155,8 @@ void mainprogramm()
                     {
                         on_off_encoder = false; // Encoder Interrupt ausschalten
 
-                        digitalWrite(relais[armposition], EIN);  // Relais Gipsmotor[ARM Position] einschalten
-                                                                 // Rüttler wird nicht eingeschalten           
+                        digitalWrite(relais[armposition], EIN); // Relais Gipsmotor[ARM Position] einschalten
+                                                                // Rüttler wird nicht eingeschalten
                         do
                         {
                             read_armposition(); // Armposition einlesen und in Variable armposition speichern
@@ -1176,11 +1208,9 @@ void mainprogramm()
                     lcd.print("   ");    // POS 01 anzeige löschen
 
                     lcd.setCursor(0, 1); // Setz Curser auf Charakter 1, Zeile 2
-                    lcd.print("12 H2O Ent. ----");
+                    lcd.print("12 H2O Ler. ----");
                     lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
                     lcd.write(byte(CURSOR));
-
-                    gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessenes Grundgewicht
 
                     write_to_LCD[11] = false; // damit immer nur einmalig auf den LCD geschrieben wird
                 } // end if (erstmalig)
@@ -1190,32 +1220,58 @@ void mainprogramm()
                 {
                     on_off_encoder = false; // Encoder Interrupt ausschalten
 
-                    digitalWrite(relais[armposition + 6], EIN); // Relais H2O-Ventil [ARM Position] einschalten
-                    digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
+                    if (ersteintritt)
+                    {
+                        if (waage_bereit())
+                        {
+                            ersteintritt = false; //  Waage wird nur einmal geprüft
+
+                            gewicht_waagschale = (scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor; // gemessenes Grundgewicht
+                        }
+                        else
+                        {
+                            //  Anzeige wieder herstellen
+                            //        lcd.print("12 H2O Ler. xxxx");
+                            //        lcd.setCursor(2, 1); // Setz Curser auf Charakter 3, Zeile 2
+                            //        lcd.write(byte(CURSOR));
+
+                            write_to_LCD[11] = true; // damit Anzeige auf LCD refreshed wird
+                        } // end  if (!waage_bereit())
+                    }
+
+                    if (!write_to_LCD[11]) // normaler Ablauf geht weiter
+                    {
+                        digitalWrite(relais[armposition + 6], EIN); // Relais H2O-Ventil [ARM Position] einschalten
+                        digitalWrite(RELAIS_WP, EIN);               // Relais Wasserpumpe einschalten
+                    }
 
                     do
                     {
-                        read_armposition(); // Armposition einlesen und in Variable armposition speichern
-                        if (armposition != armposition_alt)
+                        read_armposition();                   // Armposition einlesen und in Variable armposition speichern
+                        if (armposition != armposition_alt || // oder
+                            write_to_LCD[11])                 // Waage ist defekt, daher ist write_to_LCD[11] == true
                         {
                             min_counter = 0;                     // Minimalwert für Encoder
                             max_counter = MAX_CURSOR_POSITIONEN; // Maximalwert für Encoder (0 bis 11, also 12 Positionen)
 
-                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
+                            //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 11
                             Encoder_count_alt = OUT_OF_RANGE; // Erststartbedingung herstellen
 
                             break; // Abbruch wenn Armposition sich geändert hat
                         } // end if (armposition != armposition_alt)
 
                         // Gewichtsanzeige auf Curserposition 12 bis 15 (also 4 Stellen)
-                    gewichtsanzeige((unsigned int)(((scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor) - gewicht_waagschale));
+                        gewichtsanzeige((unsigned int)(((scale.read_average(3) - Leergew_einheiten) / Korrekturfaktor) - gewicht_waagschale));
 
                     } while (press_key(I_O_PIN, SCAN)); // Relais halten bis I/O Taste losgelassen wird
 
-                    digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
-                    digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] einschalten
+                    if (!write_to_LCD[11]) // normaler Ablauf geht weiter
+                    {
+                        digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
+                        digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] einschalten
 
-                    release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
+                        release_key(I_O_PIN, WAIT); //  Warten bis I/O Taste losgelasen wird
+                    }
 
                     on_off_encoder = true; // Encoder Interrupt einschalten
 
