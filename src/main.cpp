@@ -64,7 +64,7 @@ void read_encoder()
 
 void setup()
 {
-	Serial.begin(115200);    // Kommunikation zum Laptop Bildschirm 
+	Serial.begin(115200); // Kommunikation zum Laptop Bildschirm
 
 	Serial.println("jetzt gehts los"); // Text auf dem Laptop Bildschirm schreiben
 
@@ -145,9 +145,9 @@ void setup()
 	// init_data();
 	// daten[0].ueberschrift = "Hello World"; // Beispiel Initialisierung der Überschrift
 
-	lcd.createChar(SMILEY, smiley);		// erstelltes Zeichen Smiley
-	lcd.createChar(HERZ, herz);			// erstelltes Zeichen Herz
-	lcd.createChar(CURSOR, cursor);		// erstelltes Zeichen Cursor
+	lcd.createChar(SMILEY, smiley);							// erstelltes Zeichen Smiley
+	lcd.createChar(HERZ, herz);								// erstelltes Zeichen Herz
+	lcd.createChar(CURSOR, cursor);							// erstelltes Zeichen Cursor
 	lcd.createChar(RECHTECK_UMRAHMUNG, rechteck_umrahmung); // erstelltes Zeichen Rechteck
 
 	// Liest die Datenstruktur aus dem EEPROM
@@ -167,10 +167,11 @@ void setup()
 	// Wasser zu Gips Verhältnis berechnen und abspeichern
 	for (int i = 0; i < MAX_DATEN_SATZ; i++) // für jeden Datensatz, 0 bis 2 also 3 Datensätze
 		h2o_gips_verhaeltnis[i] =
-			(float) daten[i].gewicht[1] //  Wasser Referenzgewicht
-			/					//  dividiert durch
-			(float) daten[i].gewicht[0]	//  Gips Referenzgewicht
-			;					//  Ergebnis ist Wasser zu Gips Verhältnis
+			(float)daten[i].gewicht[1] //  Wasser Referenzgewicht
+			/						   //  dividiert durch
+			(float)daten[i].gewicht[0] //  Gips Referenzgewicht
+			;						   //  Ergebnis ist Wasser zu Gips Verhältnis
+
 
 } // end setup **********************************************************************
 

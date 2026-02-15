@@ -758,21 +758,6 @@ void mainprogramm()
                             teilgewicht_h2o                                      // Wassergewicht
                             ;                                                    // Ergebnis ist das zu messendes Gesamtgewicht
 
-                        Serial.print("Gipsverhältnis: ");                  ///////////////////////////
-                        Serial.println(h2o_gips_verhaeltnis[armposition]); ///////////////////////////
-
-                        Serial.print("Gewicht Waagschale: "); ///////////////////////////
-                        Serial.println(gewicht_waagschale);   ///////////////////////////
-
-                        Serial.print("Teilgewicht H2O: "); ///////////////////////////
-                        Serial.println(teilgewicht_h2o);   ///////////////////////////
-
-                        Serial.print("Gipsgewicht: ");                                 ///////////////////////////
-                        Serial.println(daten[armposition].gewicht[Encoder_count_neu]); ///////////////////////////
-
-                        Serial.print("Gesamtgewicht + Waagschale: "); ///////////////////////////
-                        Serial.println(gesamtgewicht);                ///////////////////////////
-
                         //  H2O Abfüllung beginnt ---------------------------------------
 
                         digitalWrite(relais[armposition + 6], EIN); // Relais H2O-Ventil [ARM Position] einschalten
@@ -808,9 +793,6 @@ void mainprogramm()
                         //  Damit eine stabile Gewichtsangabe am LCD steht
                         Gewicht = (scale.read_average(WAAGEZYKLEN_5) - Leergew_einheiten) / Korrekturfaktor;
                         LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
-
-                        Serial.print("Gewicht Waagschale + H2O gemessen: "); ///////////////////////////
-                        Serial.println(Gewicht);                             ///////////////////////////
 
                         Musik(MELODIE_TON_1000); // Kurzer Signalton zum Ende der Wasserabfüllung
 
@@ -859,9 +841,6 @@ void mainprogramm()
                         //  Damit eine stabile Gewichtsangabe am LCD steht
                         Gewicht = (scale.read_average(WAAGEZYKLEN_3) - Leergew_einheiten) / Korrekturfaktor;
                         LCD_fortschtitt(gesamtgewicht - gewicht_waagschale, Gewicht - gewicht_waagschale); // Fortschritt der Abfüllung auf LCD grafisch anzeigen
-
-                        Serial.print("Gewicht Waagschale + H2O + Gips gemessen: "); ///////////////////////////
-                        Serial.println(Gewicht);
 
                         Musik(MELODIE_OK);
                         //  Encoder_count_neu bleibt unverändert, Verbleib im Manü case 2, 3, 4, 5
@@ -1001,21 +980,6 @@ void mainprogramm()
                             teilgewicht_h2o                                      // Wassergewicht
                             ;                                                    // Ergebnis ist das zu messendes Gesamtgewicht
 
-                        Serial.print("Gipsverhältnis: ");                  ///////////////////////////
-                        Serial.println(h2o_gips_verhaeltnis[armposition]); ///////////////////////////
-
-                        Serial.print("Gewicht Waagschale: "); ///////////////////////////
-                        Serial.println(gewicht_waagschale);   ///////////////////////////
-
-                        Serial.print("Teilgewicht H2O: "); ///////////////////////////
-                        Serial.println(teilgewicht_h2o);   ///////////////////////////
-
-                        Serial.print("Gipsgewicht: ");                                 ///////////////////////////
-                        Serial.println(daten[armposition].gewicht[Encoder_count_neu]); ///////////////////////////
-
-                        Serial.print("Gesamtgewicht + Waagschale: "); ///////////////////////////
-                        Serial.println(gesamtgewicht);                ///////////////////////////
-
                         //  H2O Abfüllung beginnt ---------------------------------------
 
                         /*
@@ -1058,9 +1022,6 @@ void mainprogramm()
 
                         digitalWrite(RELAIS_WP, AUS);               // Relais Wasserpumpe ausschalten
                         digitalWrite(relais[armposition + 6], AUS); // Relais H2O-Ventil [ARM Position] ausschalten
-
-                        Serial.print("Gewicht Waagschale + H2O gemessen: "); ///////////////////////////
-                        Serial.println(Gewicht);                             ///////////////////////////
 
                         Musik(MELODIE_TON_1000); // Kurzer Signalton zum Ende der Wasserabfüllung
 

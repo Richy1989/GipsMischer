@@ -1,41 +1,61 @@
 #include "service.h"
-
+long anzeigen_trigger_test = millis();
 // *********  Armpositionen einlesen und in Variable armposition speichern, negative Logik ******
 void read_armposition()
 {
-	if (!digitalRead(AL))		 // Negative Logik (LOW = aktiv)
-		armposition = ARM_LINKS; // 0
-	else
-	{
-		if (!digitalRead(AM))		 // Negative Logik (LOW = aktiv)
-			armposition = ARM_MITTE; // 1
-		else
-		{
-			if (!digitalRead(AR))		  // Negative Logik (LOW = aktiv)
-				armposition = ARM_RECHTS; // 2
-			else
-				armposition = ARM_NO_POS; // 3
-		} //  end else if (!digitalRead(AM))
-	} //  end else if (!digitalRead(AL))
+	// Der ternäre Operator ? : hat die Form:
+	// "COND ? expr_if_true : expr_if_false"
+	// Negative Logik (LOW/false = aktiv)
+	uint8_t mask = (digitalRead(AR) ? 0 : 0x01) | //  0b0000 0001
+				   (digitalRead(AM) ? 0 : 0x02) | //  0b0000 0010
+				   (digitalRead(AL) ? 0 : 0x04);  //  0b0000 0100
 
-	Serial.print("Armposition: ");
-	switch (armposition)
+	switch (mask)
 	{
-	case ARM_LINKS:
-		Serial.println("LINKS: "); ///////////////////////////
+	case 0x01: //  0b0000 0001
+		armposition = ARM_RECHTS;
 		break;
-	case ARM_MITTE:
-		Serial.println("MITTE: "); ///////////////////////////
+	case 0x02: //  0b0000 0010
+		armposition = ARM_MITTE;
 		break;
-	case ARM_RECHTS:
-		Serial.println("RECHTS: "); ///////////////////////////
+	case 0x04: //  0b0000 0100
+		armposition = ARM_LINKS;
 		break;
-	case ARM_NO_POS:
-		Serial.println("ARM_NO_POS: "); ///////////////////////////
-		break;
-	default:
-		break;
-	}  //  end switch (armposition)
+	default: //  0b0000 0xxx
+		armposition = ARM_NO_POS;
+		break; // Fehlerhafte Sensoren sind nicht auscodiert
+	}
+
+
+	// if (millis() > anzeigen_trigger_test + 1000)
+	{
+		
+		//Serial.println(micros() - anzeigen_trigger_test);
+		//anzeigen_trigger_test = micros();
+	//	Serial.println("Armposition: Bit3 Bit2 Bit1 --> Bit3 : LINKS , Bit2 : Mitte, Bit1 : RECHTS ");
+	//	Serial.println(mask, BIN);
+/*
+		switch (armposition)
+		{
+		case ARM_LINKS:
+			Serial.println(" : LINKS"); ///////////////////////////
+			break;
+		case ARM_MITTE:
+			Serial.println(" : MITTE"); ///////////////////////////
+			break;
+		case ARM_RECHTS:
+			Serial.println(" : RECHTS"); ///////////////////////////
+			break;
+		case ARM_NO_POS:
+			Serial.println(" : ARM_NO_POS"); ///////////////////////////
+			break;
+		default:
+			break;
+		} //  end switch (armposition)
+
+		//Serial.println(); ///////////////////////////
+		*/
+	}
 
 } //  end read_armposition()
 /****************************    ende read_armposition() 	********************************/

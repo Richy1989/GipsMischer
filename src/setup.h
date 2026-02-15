@@ -74,16 +74,17 @@
 // #define ???                        25 // NU
 
 // Pin Definition für Eingang Arduino:3 x Hall Sensor
+/*
 #define AR 23 // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
 #define AL 25 // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
 #define AM 24 // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
+*/
 
-/*
 // Pin Definition für Eingang Arduino:3 x Hall Sensor
 #define AR 26 // Eingang Armposition LINKS,  pullup,  ARM_LINKS  0
 #define AL 27 // Eingang Armposition MITTE,  pullup,  ARM_MITTE  1
 #define AM 28 // Eingang Armposition RECHTS, pullup,  ARM_RECHTS 2
-*/
+
 
 // #define ???                        29 // NU
 
@@ -402,6 +403,7 @@ extern byte smiley[8];			   // erstellt Zeichen Smiley
 extern byte herz[8];			   // erstellt Zeichen Herz
 extern byte cursor[8];			   // erstellt Zeichen Cursor
 extern byte rechteck_umrahmung[8]; // erstellt Zeichen "umrahmtes Rechteck"
+
 
 /******************************************
  *      VARIABLEN DEFINITIONEN  Ende        *
